@@ -18,12 +18,12 @@ Open [http://localhost:3000](http://localhost:3000).
 Drop the three pre-desaturated Monet "Houses of Parliament" paintings at:
 
 ```
-public/parliament-sunset.jpg   — used in the hero (lightest, atmospheric)
-public/parliament-fog.jpg      — used as a bordered inset in the math section
-public/parliament-stormy.jpg   — used as the dominant visual in the founding section
+public/parliament-sunset.jpg
+public/parliament-fog.jpg
+public/parliament-stormy.jpg
 ```
 
-All three also appear together in the variant strip between Math and Founding. The site will render without them (broken images), but the layout assumes they exist. They should already be black-and-white — no CSS filters are applied.
+All three are used only in the hero, where they crossfade on a 24s loop (8s per painting, 1s overlapping crossfades). The site will render without them (broken images), but the hero is built around them. They should already be black-and-white — no CSS filters are applied.
 
 ## Placeholders to replace
 

@@ -52,3 +52,37 @@ details > summary::-webkit-details-marker {
   letter-spacing: -0.025em;
   font-weight: 400;
 }
+
+/* ─── Monet hero crossfade ───
+   Three paintings cycle every 9s — one transition every 3s.
+   Each image holds for 2.5s, crossfades to the next over 0.5s,
+   then sits hidden for 6s. Opacity sums to 1.0 throughout. */
+@keyframes monet-1 {
+  0%, 27.78%   { opacity: 1; }   /* solid 0s–2.5s */
+  33.33%       { opacity: 0; }   /* faded out by 3s */
+  94.44%       { opacity: 0; }   /* still hidden at 8.5s */
+  100%         { opacity: 1; }   /* fades back in by 9s */
+}
+@keyframes monet-2 {
+  0%, 27.78%   { opacity: 0; }
+  33.33%       { opacity: 1; }   /* solid 3s–5.5s */
+  61.11%       { opacity: 1; }
+  66.67%, 100% { opacity: 0; }
+}
+@keyframes monet-3 {
+  0%, 61.11%   { opacity: 0; }
+  66.67%       { opacity: 1; }   /* solid 6s–8.5s */
+  94.44%       { opacity: 1; }
+  100%         { opacity: 0; }
+}
+
+.monet-1 { opacity: 1; animation: monet-1 9s linear infinite; }
+.monet-2 { opacity: 0; animation: monet-2 9s linear infinite; }
+.monet-3 { opacity: 0; animation: monet-3 9s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .monet-1, .monet-2, .monet-3 {
+    animation: none !important;
+  }
+  /* falls back to baseline opacity above — only image 1 visible */
+}
