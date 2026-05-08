@@ -2,7 +2,7 @@ import { BetaPlot } from "./BetaPlot";
 import { AllocatorDiagram } from "./Allocator";
 
 const STRIPE_LINK = "STRIPE_LINK_HERE";
-const SPOTS_REMAINING = 7;
+const SPOTS_REMAINING = 10;
 const SPOTS_TOTAL = 10;
 
 export default function Page() {
@@ -103,7 +103,7 @@ function Allocator() {
   return (
     <section className="section-black bg-ink text-paper border-b border-paper">
       <SectionMark dark />
-      <div className="px-8 md:px-16 py-28 md:py-40">
+      <div className="px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
         <div className="max-w-[1100px]">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-paper/60 mb-10">
             Allocation + generation
@@ -137,7 +137,7 @@ function MathSection() {
       {/* Decorative massive λ — asymmetric (right side, bleeding past edge) */}
       <div
         aria-hidden
-        className="pointer-events-none absolute select-none font-serif leading-none text-ink"
+        className="pointer-events-none absolute select-none font-serif leading-none text-ink hidden md:block"
         style={{
           right: "-40px",
           top: "60px",
@@ -147,7 +147,7 @@ function MathSection() {
         λ
       </div>
 
-      <div className="relative px-8 md:px-16 py-28 md:py-40">
+      <div className="relative px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
         <div className="max-w-[820px]">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60 mb-10">
             The math
@@ -167,7 +167,7 @@ function MathSection() {
 
         {/* Beta plot — black lines on white */}
         <div className="mt-20 md:mt-28 border border-ink p-6 md:p-10 bg-paper">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-0 mb-6">
             <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60">
               Posterior over θ — three variants
             </span>
@@ -211,7 +211,7 @@ function Founding() {
     >
       <SectionMark />
 
-      <div className="px-8 md:px-16 py-28 md:py-40">
+      <div className="px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 md:col-span-7">
             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60 mb-10">
@@ -282,7 +282,7 @@ function FAQ() {
   return (
     <section className="section-black bg-ink text-paper border-b border-paper">
       <SectionMark dark />
-      <div className="px-8 md:px-16 py-28 md:py-40">
+      <div className="px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
         <div className="max-w-[1100px]">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-paper/60 mb-10">
             Questions
