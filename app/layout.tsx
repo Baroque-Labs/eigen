@@ -40,7 +40,6 @@ export const metadata: Metadata = {
     title: "Eigen — Email that optimizes itself",
     description:
       "Autonomous email optimization. Bayesian. Continuous. No more A/B tests.",
-    images: ["/og.png"],
     type: "website",
   },
   twitter: {
@@ -48,7 +47,6 @@ export const metadata: Metadata = {
     title: "Eigen — Email that optimizes itself",
     description:
       "Autonomous email optimization. Bayesian. Continuous. No more A/B tests.",
-    images: ["/og.png"],
   },
 };
 
