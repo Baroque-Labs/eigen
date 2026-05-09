@@ -56,6 +56,24 @@ export const organizations = pgTable("organizations", {
     .defaultNow(),
 });
 
+export const memberships = pgTable(
+  "memberships",
+  {
+    clerkUserId: text("clerk_user_id").notNull(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    role: text("role").notNull().default("owner"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.clerkUserId, t.orgId] }),
+    index("memberships_clerk_user_idx").on(t.clerkUserId),
+  ],
+);
+
 export const apiKeys = pgTable(
   "api_keys",
   {
@@ -103,11 +121,13 @@ export const campaigns = pgTable(
     orgId: uuid("org_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    domainId: uuid("domain_id")
-      .notNull()
-      .references(() => domains.id, { onDelete: "restrict" }),
+    // Nullable until the customer picks a verified sending domain.
+    // Enforced as required at campaign-launch time, not at draft time.
+    domainId: uuid("domain_id").references(() => domains.id, {
+      onDelete: "restrict",
+    }),
     name: text("name").notNull(),
-    fromAddress: text("from_address").notNull(),
+    fromAddress: text("from_address"),
     fromName: text("from_name"),
     baselineSubject: text("baseline_subject").notNull(),
     baselineBodyMd: text("baseline_body_md").notNull(),

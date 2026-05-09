@@ -2,19 +2,26 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { UserButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
+import { requireOrg } from "@/app/_lib/auth/org";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
+  // Sign-in and sign-up pages share this layout but have no signed-in
+  // user yet. Render the children bare so Clerk's widgets can mount
+  // without the dashboard chrome (and without trying to look up an org).
   const user = await currentUser();
-  const greetingName =
-    user?.firstName ||
-    user?.username ||
-    user?.primaryEmailAddress?.emailAddress.split("@")[0] ||
-    "there";
+  if (!user) {
+    return <>{children}</>;
+  }
+
+  const { greetingName, org } = await requireOrg();
 
   return (
     <div className="min-h-screen flex">
       <aside className="w-56 border-r border-ink/10 px-4 py-6 flex flex-col gap-6 bg-paper">
-        <div className="font-serif text-2xl">Eigen</div>
+        <div>
+          <div className="font-serif text-2xl">Eigen</div>
+          <div className="text-xs text-ink/50 mt-1">{org.name}</div>
+        </div>
         <nav className="flex flex-col gap-1 text-sm">
           <Link
             href="/campaigns"
