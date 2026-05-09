@@ -1,7 +1,7 @@
 import { BetaPlot } from "./BetaPlot";
 import { AllocatorDiagram } from "./Allocator";
 
-const SPOTS_REMAINING = 7;
+const SPOTS_REMAINING = 10;
 const SPOTS_TOTAL = 10;
 const CHECKOUT_URL = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK ?? "#";
 
@@ -69,8 +69,8 @@ function Hero() {
             </h1>
             <p className="mt-8 text-[19px] leading-relaxed text-ink/80 max-w-md">
               Eigen runs Thompson sampling over your variants in production —
-              killing losers, compounding winners, and spawning new variants
-              the moment a test reaches significance. Continuously. Bayesianly.
+              killing losers, compounding winners, and spawning new variants the
+              moment a test reaches significance. Continuously. Bayesianly.
             </p>
 
             <div className="mt-10 flex flex-col items-start gap-3">
@@ -103,7 +103,7 @@ function Allocator() {
   return (
     <section className="section-black bg-ink text-paper border-b border-paper">
       <SectionMark dark />
-      <div className="px-8 md:px-16 py-28 md:py-40">
+      <div className="px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
         <div className="max-w-[1100px]">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-paper/60 mb-10">
             Allocation + generation
@@ -118,9 +118,9 @@ function Allocator() {
         </div>
 
         <p className="mt-8 max-w-[68ch] font-mono text-[12px] leading-relaxed text-paper/60">
-          Each send is evidence. Posteriors update. Allocation tracks
-          Pr(variant is best). Winners compound, losers retire, and new
-          variants spawn from the leader — automatically.
+          Each send is evidence. Posteriors update. Allocation tracks Pr(variant
+          is best). Winners compound, losers retire, and new variants spawn from
+          the leader — automatically.
         </p>
       </div>
     </section>
@@ -137,7 +137,7 @@ function MathSection() {
       {/* Decorative massive λ — asymmetric (right side, bleeding past edge) */}
       <div
         aria-hidden
-        className="pointer-events-none absolute select-none font-serif leading-none text-ink"
+        className="pointer-events-none absolute select-none font-serif leading-none text-ink hidden md:block"
         style={{
           right: "-40px",
           top: "60px",
@@ -147,7 +147,7 @@ function MathSection() {
         λ
       </div>
 
-      <div className="relative px-8 md:px-16 py-28 md:py-40">
+      <div className="relative px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
         <div className="max-w-[820px]">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60 mb-10">
             The math
@@ -167,7 +167,7 @@ function MathSection() {
 
         {/* Beta plot — black lines on white */}
         <div className="mt-20 md:mt-28 border border-ink p-6 md:p-10 bg-paper">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-0 mb-6">
             <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60">
               Posterior over θ — three variants
             </span>
@@ -184,10 +184,11 @@ function MathSection() {
             The posterior update
           </p>
           <pre className="border border-ink p-6 md:p-8 font-mono text-[15px] md:text-[18px] leading-relaxed overflow-x-auto">
-{`Beta(α, β) + (s, f)  →  Beta(α + s, β + f)`}
+            {`Beta(α, β) + (s, f)  →  Beta(α + s, β + f)`}
           </pre>
           <p className="mt-4 font-mono text-[12px] text-ink/60">
-            s = successes since last update, f = failures. Two integers. That&apos;s the whole state.
+            s = successes since last update, f = failures. Two integers.
+            That&apos;s the whole state.
           </p>
         </div>
       </div>
@@ -205,13 +206,10 @@ function Founding() {
   ];
 
   return (
-    <section
-      id="founding"
-      className="bg-paper text-ink border-b border-ink"
-    >
+    <section id="founding" className="bg-paper text-ink border-b border-ink">
       <SectionMark />
 
-      <div className="px-8 md:px-16 py-28 md:py-40">
+      <div className="px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 md:col-span-7">
             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60 mb-10">
@@ -282,7 +280,7 @@ function FAQ() {
   return (
     <section className="section-black bg-ink text-paper border-b border-paper">
       <SectionMark dark />
-      <div className="px-8 md:px-16 py-28 md:py-40">
+      <div className="px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
         <div className="max-w-[1100px]">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-paper/60 mb-10">
             Questions
@@ -353,11 +351,7 @@ function Footer() {
 
 function SectionMark({ dark = false }: { dark?: boolean }) {
   return (
-    <div
-      className={`px-8 md:px-16 pt-8 ${
-        dark ? "text-paper" : "text-ink"
-      }`}
-    >
+    <div className={`px-8 md:px-16 pt-8 ${dark ? "text-paper" : "text-ink"}`}>
       <span className="font-serif text-[32px] leading-none">λ</span>
     </div>
   );
