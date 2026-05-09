@@ -60,7 +60,10 @@ export default function RootLayout({
         lang="en"
         className={`${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}
       >
-        <body className="font-sans bg-paper text-ink antialiased">
+        <body
+          className="font-sans bg-paper text-ink antialiased"
+          suppressHydrationWarning
+        >
           {children}
         </body>
       </html>
