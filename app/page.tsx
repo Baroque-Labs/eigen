@@ -1,9 +1,9 @@
 import { BetaPlot } from "./BetaPlot";
 import { AllocatorDiagram } from "./Allocator";
 
-const STRIPE_LINK = "STRIPE_LINK_HERE";
 const SPOTS_REMAINING = 7;
 const SPOTS_TOTAL = 10;
+const CHECKOUT_URL = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK ?? "#";
 
 export default function Page() {
   return (
@@ -75,7 +75,7 @@ function Hero() {
 
             <div className="mt-10 flex flex-col items-start gap-3">
               <a
-                href="#founding"
+                href={CHECKOUT_URL}
                 className="inline-block bg-ink text-paper px-6 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink/90 transition-colors"
               >
                 Claim a founding spot — $100
@@ -241,7 +241,7 @@ function Founding() {
 
             <div className="mt-10 flex flex-col items-start gap-3">
               <a
-                href={STRIPE_LINK}
+                href={CHECKOUT_URL}
                 className="inline-block bg-ink text-paper px-7 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink/90 transition-colors"
               >
                 Claim a founding spot — $100
