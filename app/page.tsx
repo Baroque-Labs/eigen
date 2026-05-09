@@ -196,6 +196,15 @@ function MathSection() {
             s = successes since last update, f = failures. Two integers.
             That&apos;s the whole state.
           </p>
+
+          <a
+            href="https://docs.google.com/document/d/1jrFn9ftcccNQA9teZJMusLnvePW1vgsdyaopjQkYDvo/edit?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-8 inline-block font-mono text-[12px] uppercase tracking-[0.18em] text-ink/70 hover:text-ink underline underline-offset-4 decoration-ink/40 hover:decoration-ink transition-colors"
+          >
+            Read the methodology paper →
+          </a>
         </div>
       </div>
     </section>
