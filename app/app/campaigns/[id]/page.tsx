@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCampaign } from "@/app/_lib/campaigns/queries";
+import { getVerifiedDomain } from "@/app/_lib/domains/queries";
+import { SendTestButton } from "./SendTestButton";
 
 type Params = Promise<{ id: string }>;
 
@@ -16,6 +18,7 @@ export default async function CampaignDetailPage({ params }: { params: Params })
   const { id } = await params;
   const campaign = await getCampaign(id);
   if (!campaign) notFound();
+  const verifiedDomain = await getVerifiedDomain();
 
   return (
     <div className="max-w-3xl">
@@ -34,9 +37,21 @@ export default async function CampaignDetailPage({ params }: { params: Params })
       <p className="text-xs font-mono text-ink/40 mb-8">{campaign.id}</p>
 
       <section className="border border-ink/10 rounded-lg p-6 mb-6">
-        <h2 className="text-xs uppercase tracking-wider text-ink/50 mb-3">
-          Baseline email
-        </h2>
+        <div className="flex items-start justify-between mb-3">
+          <h2 className="text-xs uppercase tracking-wider text-ink/50">
+            Baseline email
+          </h2>
+          {verifiedDomain ? (
+            <SendTestButton campaignId={campaign.id} />
+          ) : (
+            <Link
+              href="/domains"
+              className="text-xs text-ink/50 hover:text-ink/80"
+            >
+              Verify a domain to enable test sends →
+            </Link>
+          )}
+        </div>
         <div className="text-sm font-medium mb-2">{campaign.baselineSubject}</div>
         <pre className="text-sm whitespace-pre-wrap font-sans text-ink/80">
           {campaign.baselineBodyMd}
@@ -48,7 +63,11 @@ export default async function CampaignDetailPage({ params }: { params: Params })
           Next up
         </h2>
         <ol className="list-decimal pl-5 space-y-1">
-          <li>Verify a sending domain in Domains.</li>
+          <li>
+            {verifiedDomain
+              ? `Sending domain ${verifiedDomain.hostname} is verified.`
+              : "Verify a sending domain in Domains."}
+          </li>
           <li>Eigen generates variants — approve them in the queue.</li>
           <li>Upload a recipient list and launch.</li>
         </ol>
