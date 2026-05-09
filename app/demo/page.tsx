@@ -45,6 +45,8 @@ type SimState = {
   allocationHistory: AllocSnapshot[];
   recentChoices: string[];
   pendingReplacement: boolean;
+  lastGenerationAtTrial: number;
+  ended: boolean;
 };
 
 type ApiVariant = { subject: string; body: string; axis: string };
@@ -65,13 +67,27 @@ If you've been on the fence, this is the moment.
 
 const ROLLING_WINDOW = 100;
 const POSTERIOR_SNAPSHOT_INTERVAL = 20;
-const STABILIZATION_CHECK_INTERVAL = 50;
-const STABILIZATION_THRESHOLD = 0.002;
-const MIN_IMPRESSIONS_PER_VARIANT = 150;
-const FORCE_STABILIZATION_AT = 1500;
 const REPLACEMENT_COUNT = 2;
 const FADE_DURATION_MS = 1500;
 const FLASH_DURATION_MS = 2000;
+
+// Generation rule — blends a confidence-of-underperformance check with a
+// time-bounded fallback so the loop always progresses without thrashing.
+const GENERATION_CHECK_INTERVAL = 50;       // trials between rule evaluations
+const MIN_GAP_BETWEEN_GEN = 200;            // cooldown after a generation
+const MAX_GAP_BETWEEN_GEN = 600;            // hard ceiling — force a gen if reached
+const MIN_IMPRESSIONS_FOR_RETIREMENT = 60;  // a variant must have this many sends to be retired
+const TAIL_THRESHOLD = 0.05;                // Pr(variant is best) below this = "confident loser"
+const PROB_BEST_SAMPLES = 500;              // Monte-Carlo samples used to estimate Pr(best)
+
+// Hard stop on the demo: when a generation would mint variant #13 or beyond,
+// we end the test instead and let the user reset.
+const MAX_VARIANTS = 12;
+
+// Default range the user can override on the input page. The demo samples 3
+// variant true-rates uniformly from this range; the baseline is then their mean.
+const DEFAULT_MIN_RATE_PCT = 4;
+const DEFAULT_MAX_RATE_PCT = 30;
 
 // Pulled from Monet's "Houses of Parliament" series — sunset, fog, stormy.
 // Muted, painterly hues. Used only for variant identity; everything else
@@ -105,9 +121,11 @@ function clamp(x: number, lo: number, hi: number): number {
 
 // Standalone variant true-rate sampler — used for the initial 3 variants.
 // Baseline rate is then the *mean* of these, so the baseline can never beat
-// the strongest variant by construction.
-function sampleStandaloneVariantRate(): number {
-  return clamp(randUniform(0.04, 0.30), 0.02, 0.30);
+// the strongest variant by construction. Range is configurable by the user.
+function sampleStandaloneVariantRate(min: number, max: number): number {
+  const lo = Math.max(0, Math.min(min, max));
+  const hi = Math.min(1, Math.max(min, max));
+  return clamp(randUniform(lo, hi), 0, 1);
 }
 
 // Replacement variants are seeded around the surviving winner's true rate.
@@ -233,23 +251,62 @@ function tickOnce(s: SimState): SimState {
 }
 
 /* ────────────────────────────────────────────────────────────────
-   Stabilization check
+   Generation rule — confidence × time
    ──────────────────────────────────────────────────────────────── */
 
-function isStable(active: Variant[]): boolean {
-  for (const v of active) {
-    if (v.impressions < MIN_IMPRESSIONS_PER_VARIANT) return false;
-    const h = v.posteriorMeanHistory;
-    if (h.length < 5) return false;
-    const last5 = h.slice(-5);
-    let sum = 0;
-    for (let i = 1; i < last5.length; i++) {
-      sum += Math.abs(last5[i].mean - last5[i - 1].mean);
+// Monte-Carlo estimate of Pr(variant is the best) by sampling each posterior.
+function probabilityBest(active: Variant[]): Map<string, number> {
+  const wins = new Map<string, number>();
+  for (const v of active) wins.set(v.id, 0);
+  for (let s = 0; s < PROB_BEST_SAMPLES; s++) {
+    let bestId = active[0].id;
+    let bestVal = -Infinity;
+    for (const v of active) {
+      const x = sampleBeta(v.alpha, v.beta);
+      if (x > bestVal) {
+        bestVal = x;
+        bestId = v.id;
+      }
     }
-    const meanAbsChange = sum / (last5.length - 1);
-    if (meanAbsChange >= STABILIZATION_THRESHOLD) return false;
+    wins.set(bestId, (wins.get(bestId) ?? 0) + 1);
   }
-  return true;
+  const out = new Map<string, number>();
+  for (const v of active) {
+    out.set(v.id, (wins.get(v.id) ?? 0) / PROB_BEST_SAMPLES);
+  }
+  return out;
+}
+
+// Returns the ids of variants to retire — empty if no generation should fire.
+function selectVictims(sim: SimState): string[] {
+  const active = sim.variants.filter((v) => v.status === "active");
+  if (active.length < 4) return [];
+
+  const sinceLast = sim.trial - sim.lastGenerationAtTrial;
+  if (sinceLast < MIN_GAP_BETWEEN_GEN) return [];
+
+  // Force after the max gap — bottom 2 by posterior mean, regardless of confidence.
+  if (sinceLast >= MAX_GAP_BETWEEN_GEN) {
+    return active
+      .slice()
+      .sort((a, b) => betaMean(a.alpha, a.beta) - betaMean(b.alpha, b.beta))
+      .slice(0, REPLACEMENT_COUNT)
+      .map((v) => v.id);
+  }
+
+  // Confidence path: variants with enough data AND Pr(best) under the tail threshold.
+  const probs = probabilityBest(active);
+  const losers = active
+    .filter(
+      (v) =>
+        v.impressions >= MIN_IMPRESSIONS_FOR_RETIREMENT &&
+        (probs.get(v.id) ?? 1) < TAIL_THRESHOLD,
+    )
+    .sort((a, b) => (probs.get(a.id) ?? 1) - (probs.get(b.id) ?? 1));
+  if (losers.length >= REPLACEMENT_COUNT) {
+    return losers.slice(0, REPLACEMENT_COUNT).map((v) => v.id);
+  }
+  return [];
 }
 
 /* ────────────────────────────────────────────────────────────────
@@ -259,6 +316,8 @@ function isStable(active: Variant[]): boolean {
 export default function DemoPage() {
   const [phase, setPhase] = useState<Phase>("input");
   const [inputEmail, setInputEmail] = useState<string>(STARTER_EMAIL);
+  const [minRatePct, setMinRatePct] = useState<number>(DEFAULT_MIN_RATE_PCT);
+  const [maxRatePct, setMaxRatePct] = useState<number>(DEFAULT_MAX_RATE_PCT);
   const [sim, setSim] = useState<SimState | null>(null);
   const [speed, setSpeed] = useState<number>(10);
   const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -301,9 +360,11 @@ export default function DemoPage() {
     const baselineParsed = parseInputEmail(inputEmail);
     // Sample 3 variant true-rates first; baseline is then their mean,
     // which guarantees at least one variant beats baseline.
+    const minRate = minRatePct / 100;
+    const maxRate = maxRatePct / 100;
     const variantTrueRates = apiVariants
       .slice(0, 3)
-      .map(() => sampleStandaloneVariantRate());
+      .map(() => sampleStandaloneVariantRate(minRate, maxRate));
     const baselineRate =
       variantTrueRates.reduce((a, b) => a + b, 0) / variantTrueRates.length;
     const variants: Variant[] = [
@@ -348,6 +409,8 @@ export default function DemoPage() {
       trial: 0,
       generation: 1,
       generationFlash: null,
+      lastGenerationAtTrial: 0,
+      ended: false,
       eigenImpressions: 0,
       eigenConversions: 0,
       uniformImpressions: 0,
@@ -360,7 +423,7 @@ export default function DemoPage() {
     });
     setIsPaused(false);
     setPhase("running");
-  }, [inputEmail]);
+  }, [inputEmail, minRatePct, maxRatePct]);
 
   /* ── Reset ───────────────────────────────────────────────────── */
 
@@ -377,7 +440,7 @@ export default function DemoPage() {
 
   useEffect(() => {
     if (phase !== "running" || !sim) return;
-    if (isPaused || sim.pendingReplacement) return;
+    if (isPaused || sim.pendingReplacement || sim.ended) return;
     const ms = Math.max(20, Math.round(1000 / speed));
     const id = window.setInterval(() => {
       setSim((prev) => (prev ? tickOnce(prev) : prev));
@@ -387,8 +450,9 @@ export default function DemoPage() {
 
   /* ── Stabilization → kill bottom 2 → call API → spawn replacements ── */
 
-  const runReplacement = useCallback(async () => {
+  const runReplacement = useCallback(async (victimIds: string[]) => {
     if (replacementInFlightRef.current) return;
+    if (victimIds.length === 0) return;
     const current = simRef.current;
     if (!current) return;
     const active = current.variants.filter((v) => v.status === "active");
@@ -396,13 +460,14 @@ export default function DemoPage() {
 
     replacementInFlightRef.current = true;
 
-    // Sort active by posterior mean descending
-    const sorted = active.slice().sort(
-      (a, b) => betaMean(b.alpha, b.beta) - betaMean(a.alpha, a.beta),
-    );
-    const dying = sorted.slice(-REPLACEMENT_COUNT);
-    const dyingIds = new Set(dying.map((d) => d.id));
-    const winner = sorted[0];
+    const dyingIds = new Set(victimIds);
+    // Winner = best active variant NOT being retired (posterior-mean ranking).
+    const survivors = active
+      .filter((v) => !dyingIds.has(v.id))
+      .sort(
+        (a, b) => betaMean(b.alpha, b.beta) - betaMean(a.alpha, a.beta),
+      );
+    const winner = survivors[0] ?? active[0];
 
     setSim((prev) => {
       if (!prev) return prev;
@@ -483,6 +548,7 @@ export default function DemoPage() {
         variants: prev.variants.concat(newVariants),
         generation: nextGeneration,
         generationFlash: nextGeneration,
+        lastGenerationAtTrial: prev.trial,
         pendingReplacement: false,
       };
     });
@@ -495,21 +561,28 @@ export default function DemoPage() {
     }, FLASH_DURATION_MS);
   }, []);
 
-  /* ── Stabilization watcher ──────────────────────────────────── */
+  /* ── Generation watcher ──────────────────────────────────────── */
 
   useEffect(() => {
     if (!sim) return;
+    if (sim.ended) return;
     if (sim.pendingReplacement) return;
-    if (sim.trial < STABILIZATION_CHECK_INTERVAL) return;
-    if (sim.trial % STABILIZATION_CHECK_INTERVAL !== 0) return;
+    if (replacementInFlightRef.current) return;
+    if (sim.trial < GENERATION_CHECK_INTERVAL) return;
+    if (sim.trial % GENERATION_CHECK_INTERVAL !== 0) return;
 
-    const active = sim.variants.filter((v) => v.status === "active");
-    if (active.length < 4) return;
+    const victims = selectVictims(sim);
+    if (victims.length === 0) return;
 
-    const force = sim.trial >= FORCE_STABILIZATION_AT;
-    if (force || isStable(active)) {
-      void runReplacement();
+    // The generation rule wants to retire variants — but if doing so would
+    // mint variant #13+, we instead end the demo and let the user reset.
+    if (sim.variants.length + REPLACEMENT_COUNT > MAX_VARIANTS) {
+      setSim((prev) => (prev ? { ...prev, ended: true } : prev));
+      setIsPaused(true);
+      return;
     }
+
+    void runReplacement(victims);
   }, [sim, runReplacement]);
 
   /* ── Render ──────────────────────────────────────────────────── */
@@ -522,6 +595,10 @@ export default function DemoPage() {
         <InputPhase
           inputEmail={inputEmail}
           setInputEmail={setInputEmail}
+          minRatePct={minRatePct}
+          setMinRatePct={setMinRatePct}
+          maxRatePct={maxRatePct}
+          setMaxRatePct={setMaxRatePct}
           onStart={handleStart}
           errorMsg={errorMsg}
         />
@@ -578,14 +655,23 @@ function Nav() {
 function InputPhase({
   inputEmail,
   setInputEmail,
+  minRatePct,
+  setMinRatePct,
+  maxRatePct,
+  setMaxRatePct,
   onStart,
   errorMsg,
 }: {
   inputEmail: string;
   setInputEmail: (s: string) => void;
+  minRatePct: number;
+  setMinRatePct: (n: number) => void;
+  maxRatePct: number;
+  setMaxRatePct: (n: number) => void;
   onStart: () => void;
   errorMsg: string | null;
 }) {
+  const rangeValid = minRatePct < maxRatePct;
   return (
     <section className="px-6 md:px-10 py-16 md:py-24">
       <div className="max-w-[800px] mx-auto">
@@ -617,10 +703,58 @@ function InputPhase({
           />
         </div>
 
-        <div className="mt-8 flex flex-col items-start gap-3">
+        <div className="mt-10">
+          <label className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60 mb-3 block">
+            Conversion rate range
+          </label>
+          <p className="text-[13px] text-ink/70 leading-relaxed max-w-[58ch] mb-4">
+            Each variant&rsquo;s hidden true conversion rate is sampled
+            uniformly from this range. The baseline is set to the mean of
+            the three sampled rates, so at least one variant always beats
+            the baseline.
+          </p>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 font-mono text-[12px] text-ink/80">
+            <label className="inline-flex items-center gap-2">
+              <span className="uppercase tracking-[0.14em] text-ink/60">min</span>
+              <input
+                type="number"
+                step={0.5}
+                min={0}
+                max={100}
+                value={minRatePct}
+                onChange={(e) =>
+                  setMinRatePct(parseFloat(e.target.value || "0"))
+                }
+                className="w-20 border border-ink bg-paper px-2 py-1 font-mono text-[13px] tabular-nums focus:outline-none"
+              />
+              <span className="text-ink/60">%</span>
+            </label>
+            <span className="text-ink/40">to</span>
+            <label className="inline-flex items-center gap-2">
+              <span className="uppercase tracking-[0.14em] text-ink/60">max</span>
+              <input
+                type="number"
+                step={0.5}
+                min={0}
+                max={100}
+                value={maxRatePct}
+                onChange={(e) =>
+                  setMaxRatePct(parseFloat(e.target.value || "0"))
+                }
+                className="w-20 border border-ink bg-paper px-2 py-1 font-mono text-[13px] tabular-nums focus:outline-none"
+              />
+              <span className="text-ink/60">%</span>
+            </label>
+            {!rangeValid && (
+              <span className="text-ink/60">min must be below max</span>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-10 flex flex-col items-start gap-3">
           <button
             onClick={onStart}
-            disabled={!inputEmail.trim()}
+            disabled={!inputEmail.trim() || !rangeValid}
             className="bg-ink text-paper px-7 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             Run Eigen on this →
@@ -724,6 +858,26 @@ function SimulationPhase({
             <DotPulse />
           </div>
         )}
+
+      {/* Test-complete banner — fires when the next generation would mint variant #13 */}
+      {sim.ended && (
+        <div className="border border-ink bg-ink text-paper px-5 py-4 mb-6 flex flex-wrap items-baseline justify-between gap-3">
+          <div className="flex flex-col">
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-paper/70">
+              Test complete
+            </span>
+            <span className="font-serif text-[22px] leading-tight mt-1">
+              {MAX_VARIANTS} variants explored. The loop has paused.
+            </span>
+          </div>
+          <button
+            onClick={onReset}
+            className="border border-paper px-3 py-1 font-mono text-[11px] uppercase tracking-[0.14em] hover:bg-paper hover:text-ink transition-colors"
+          >
+            reset
+          </button>
+        </div>
+      )}
 
       {errorMsg && (
         <div className="font-mono text-[11px] text-ink/60 mb-4">{errorMsg}</div>
