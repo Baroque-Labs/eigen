@@ -1,2095 +1,2555 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<base href="/pitch/" />
-<title>Eigen — Founding Round</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<style>
-  :root {
-    --bg: #fdfcf9;
-    --paper: #ffffff;
-    --ink: #161412;
-    --ink-soft: #2a2723;
-    --muted: #8a847c;
-    --muted-2: #b8b1a8;
-    --rule: #e6e0d6;
-    --rule-strong: #cfc7ba;
-    --rust: #b25a3c;
-    --slate: #5e7488;
-    --plum: #7a5b6e;
-    --sage: #7e8d6f;
-    --serif: "Fraunces", "Instrument Serif", "Times New Roman", serif;
-    --sans: "Inter", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <base href="/pitch/" />
+    <title>Eigen · Founding Round</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #fdfcf9;
+        --paper: #ffffff;
+        --ink: #161412;
+        --ink-soft: #2a2723;
+        --muted: #8a847c;
+        --muted-2: #b8b1a8;
+        --rule: #e6e0d6;
+        --rule-strong: #cfc7ba;
+        --rust: #b25a3c;
+        --slate: #5e7488;
+        --plum: #7a5b6e;
+        --sage: #7e8d6f;
+        --serif: "Fraunces", "Instrument Serif", "Times New Roman", serif;
+        --sans:
+          "Inter", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+        /* Labels and tags read as small-caps Inter, not a third typeface.
+           Kept under the --mono name so existing rules don't have to change. */
+        --mono:
+          "Inter", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+      }
 
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--sans);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    overflow: hidden;
-    height: 100%;
-  }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow: hidden;
+        height: 100%;
+      }
 
-  /* ---------- Stage / slide framing ---------- */
-  .stage {
-    position: fixed;
-    inset: 0;
-    display: grid;
-    place-items: center;
-  }
-  .deck {
-    position: relative;
-    width: min(100vw, calc(100vh * 16 / 9));
-    height: min(100vh, calc(100vw * 9 / 16));
-    background: var(--paper);
-    overflow: hidden;
-    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
-  }
-  .slide {
-    position: absolute;
-    inset: 0;
-    padding: 5.2% 6.4%;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 380ms ease;
-    display: flex;
-    flex-direction: column;
-  }
-  .slide.active {
-    opacity: 1;
-    visibility: visible;
-  }
+      /* ---------- Stage / slide framing ---------- */
+      .stage {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+      }
+      .deck {
+        position: relative;
+        width: min(100vw, calc(100vh * 16 / 9));
+        height: min(100vh, calc(100vw * 9 / 16));
+        background: var(--paper);
+        overflow: hidden;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+      }
+      .slide {
+        position: absolute;
+        inset: 0;
+        padding: 5.2% 6.4%;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 380ms ease;
+        display: flex;
+        flex-direction: column;
+      }
+      .slide.active {
+        opacity: 1;
+        visibility: visible;
+      }
 
-  /* ---------- Universal chrome (wordmark, page label, counter) ---------- */
-  .wordmark {
-    position: absolute;
-    top: 4.4%;
-    left: 6.4%;
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: 1.1rem;
-    letter-spacing: 0.005em;
-    color: var(--ink);
-  }
-  .wordmark .lam {
-    font-style: italic;
-    margin-right: 0.18em;
-    font-weight: 400;
-  }
-  .meta-left, .meta-right {
-    position: absolute;
-    bottom: 4.4%;
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.18em;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-  .meta-left  { left: 6.4%; }
-  .meta-right { right: 6.4%; }
+      /* ---------- Universal chrome (wordmark, page label, counter) ---------- */
+      .wordmark {
+        position: absolute;
+        top: 4.4%;
+        left: 6.4%;
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: 1.1rem;
+        letter-spacing: 0.005em;
+        color: var(--ink);
+      }
+      .wordmark .lam {
+        font-style: italic;
+        margin-right: 0.18em;
+        font-weight: 400;
+      }
+      .meta-left,
+      .meta-right {
+        position: absolute;
+        bottom: 4.4%;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.18em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      .meta-left {
+        left: 6.4%;
+      }
+      .meta-right {
+        right: 6.4%;
+      }
 
-  .slide-no-chrome .wordmark,
-  .slide-no-chrome .meta-left,
-  .slide-no-chrome .meta-right { display: none; }
+      .slide-no-chrome .wordmark,
+      .slide-no-chrome .meta-left,
+      .slide-no-chrome .meta-right {
+        display: none;
+      }
 
-  /* ---------- Reusable type system ---------- */
-  .label {
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .h-display {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(2.8rem, 5.6vw, 5.6rem);
-    line-height: 1.02;
-    letter-spacing: -0.012em;
-    color: var(--ink);
-  }
-  .h-display .accent {
-    font-style: italic;
-    color: var(--rust);
-  }
-  .h-large {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(2.2rem, 3.8vw, 3.6rem);
-    line-height: 1.05;
-    letter-spacing: -0.01em;
-  }
-  .h-medium {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(1.5rem, 2.2vw, 2.1rem);
-    line-height: 1.15;
-    letter-spacing: -0.005em;
-  }
-  .body {
-    font-family: var(--sans);
-    font-size: clamp(0.95rem, 1.05vw, 1.05rem);
-    line-height: 1.55;
-    color: var(--ink-soft);
-    font-weight: 400;
-  }
-  .body-lg {
-    font-family: var(--sans);
-    font-size: clamp(1.05rem, 1.25vw, 1.25rem);
-    line-height: 1.5;
-    color: var(--ink-soft);
-    font-weight: 400;
-  }
-  .small {
-    font-family: var(--sans);
-    font-size: 0.92rem;
-    color: var(--muted);
-    line-height: 1.45;
-  }
-  .italic-serif {
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 400;
-    color: var(--ink-soft);
-  }
-  .rule {
-    background: var(--rule);
-    height: 1px;
-    width: 100%;
-  }
+      /* ---------- Reusable type system ---------- */
+      .label {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
 
-  /* ---------- Slide 1: hero ---------- */
-  .s1 {
-    padding: 0;
-  }
-  .s1-grid {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 0.92fr 1.08fr;
-    height: 100%;
-  }
-  .s1-art {
-    position: relative;
-    overflow: hidden;
-    /* Hero painting. Swap to assets/monet/parliament-fog.jpg or
+      /* Universal slide head: lock label position and headline rhythm so the
+         eye lands in the same place every slide flip. Excludes hero (.s1) and
+         the centered demo / build cards (.s2, .s7). Only sets top spacing —
+         each slide keeps its own headline-to-dek bottom rhythm. */
+      .slide:not(.s1):not(.s2):not(.s7) > .label {
+        margin: 0;
+      }
+      .slide:not(.s1):not(.s2):not(.s7) > .label + .h-large,
+      .slide:not(.s1):not(.s2):not(.s7) > .label + .h-display,
+      .slide:not(.s1):not(.s2):not(.s7) > .label + h2 {
+        margin-top: 1.2rem;
+      }
+      .h-display {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(2.8rem, 5.6vw, 5.6rem);
+        line-height: 1.02;
+        letter-spacing: -0.012em;
+        color: var(--ink);
+      }
+      .h-display .accent {
+        font-style: italic;
+        color: var(--rust);
+      }
+      .h-large {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(2.2rem, 3.8vw, 3.6rem);
+        line-height: 1.05;
+        letter-spacing: -0.01em;
+      }
+      .h-medium {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(1.5rem, 2.2vw, 2.1rem);
+        line-height: 1.15;
+        letter-spacing: -0.005em;
+      }
+      .body {
+        font-family: var(--sans);
+        font-size: clamp(0.95rem, 1.05vw, 1.05rem);
+        line-height: 1.55;
+        color: var(--ink-soft);
+        font-weight: 400;
+      }
+      .body-lg {
+        font-family: var(--sans);
+        font-size: clamp(1.05rem, 1.25vw, 1.25rem);
+        line-height: 1.5;
+        color: var(--ink-soft);
+        font-weight: 400;
+      }
+      .small {
+        font-family: var(--sans);
+        font-size: 0.92rem;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .italic-serif {
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 400;
+        color: var(--ink-soft);
+      }
+      .rule {
+        background: var(--rule);
+        height: 1px;
+        width: 100%;
+      }
+
+      /* ---------- Slide 1: hero ---------- */
+      .s1 {
+        padding: 0;
+      }
+      .s1-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 0.92fr 1.08fr;
+        height: 100%;
+      }
+      .s1-art {
+        position: relative;
+        overflow: hidden;
+        /* Hero painting. Swap to assets/monet/parliament-fog.jpg or
        parliament-stormy.jpg for an alternate mood. If the file is missing,
        the gradient layered below shows through. */
-    background:
-      url('assets/monet/parliament-sunset.jpg') center / cover no-repeat,
-      radial-gradient(60% 50% at 30% 35%, rgba(255, 198, 140, 0.55), transparent 70%),
-      radial-gradient(70% 60% at 70% 70%, rgba(178, 90, 60, 0.45), transparent 70%),
-      radial-gradient(80% 70% at 50% 90%, rgba(94, 116, 136, 0.6), transparent 75%),
-      linear-gradient(180deg, #d9c8b0 0%, #b89678 35%, #6e7686 70%, #2f3a48 100%);
-  }
-  .s1-art::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.25), transparent 60%),
-      radial-gradient(2px 2px at 60% 50%, rgba(255,255,255,0.15), transparent 60%),
-      radial-gradient(3px 3px at 80% 20%, rgba(0,0,0,0.08), transparent 60%),
-      radial-gradient(2px 2px at 40% 80%, rgba(0,0,0,0.1), transparent 60%);
-    mix-blend-mode: overlay;
-    opacity: 0.7;
-    pointer-events: none;
-  }
-  .s1-art .caption {
-    position: absolute;
-    bottom: 8%;
-    left: 8%;
-    right: 8%;
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.85);
-  }
-  .s1-content {
-    padding: 7% 7% 6% 7%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
-  }
-  .s1-hero-mark {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(3.6rem, 7vw, 6.6rem);
-    line-height: 1;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-  }
-  .s1-hero-mark .lam {
-    font-style: italic;
-    margin-right: 0.12em;
-  }
-  .s1-headline {
-    margin-top: auto;
-  }
-  .s1-headline .h-display {
-    margin: 0 0 1.6rem 0;
-  }
-  .s1-headline .body-lg {
-    white-space: nowrap;
-  }
-  .s1-footer {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 2.2rem;
-    padding-top: 1.1rem;
-    border-top: 1px solid var(--rule);
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
+        background:
+          url("assets/monet/parliament-sunset.jpg") center / cover no-repeat,
+          radial-gradient(
+            60% 50% at 30% 35%,
+            rgba(255, 198, 140, 0.55),
+            transparent 70%
+          ),
+          radial-gradient(
+            70% 60% at 70% 70%,
+            rgba(178, 90, 60, 0.45),
+            transparent 70%
+          ),
+          radial-gradient(
+            80% 70% at 50% 90%,
+            rgba(94, 116, 136, 0.6),
+            transparent 75%
+          ),
+          linear-gradient(
+            180deg,
+            #d9c8b0 0%,
+            #b89678 35%,
+            #6e7686 70%,
+            #2f3a48 100%
+          );
+      }
+      .s1-art::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(
+            2px 2px at 20% 30%,
+            rgba(255, 255, 255, 0.25),
+            transparent 60%
+          ),
+          radial-gradient(
+            2px 2px at 60% 50%,
+            rgba(255, 255, 255, 0.15),
+            transparent 60%
+          ),
+          radial-gradient(
+            3px 3px at 80% 20%,
+            rgba(0, 0, 0, 0.08),
+            transparent 60%
+          ),
+          radial-gradient(
+            2px 2px at 40% 80%,
+            rgba(0, 0, 0, 0.1),
+            transparent 60%
+          );
+        mix-blend-mode: overlay;
+        opacity: 0.7;
+        pointer-events: none;
+      }
+      .s1-art .caption {
+        position: absolute;
+        bottom: 8%;
+        left: 8%;
+        right: 8%;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .s1-content {
+        padding: 7% 7% 6% 7%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+      }
+      .s1-hero-mark {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(3.6rem, 7vw, 6.6rem);
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+      .s1-hero-mark .lam {
+        font-style: italic;
+        margin-right: 0.12em;
+      }
+      .s1-headline {
+        margin-top: auto;
+      }
+      .s1-headline .h-display {
+        margin: 0 0 1.6rem 0;
+      }
+      .s1-headline .body-lg {
+        white-space: nowrap;
+      }
+      .s1-footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2.2rem;
+        padding-top: 1.1rem;
+        border-top: 1px solid var(--rule);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
 
-  /* ---------- Slide 2: the problem ---------- */
-  .s-problem-headline em { color: var(--rust); font-style: italic; }
-  .s-problem-dek {
-    margin: 1.1rem 0 0 0;
-    max-width: 70ch;
-  }
-  .s-problem-cols {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 1px 1fr 1px 1fr;
-    margin-top: 2.6rem;
-    gap: 0;
-    align-items: stretch;
-  }
-  .s-problem-col {
-    padding: 0 2.2rem;
-    display: flex;
-    flex-direction: column;
-  }
-  .s-problem-col:first-child { padding-left: 0; }
-  .s-problem-col:last-child  { padding-right: 0; }
-  .s-problem-vrule { background: var(--rule); }
-  .s-problem-tag {
-    font-family: var(--mono);
-    font-size: 0.66rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 1.2rem;
-  }
-  .s-problem-h {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(1.4rem, 2vw, 1.95rem);
-    line-height: 1.05;
-    letter-spacing: -0.005em;
-    margin: 0 0 0.95rem 0;
-    color: var(--ink);
-  }
-  .s-problem-body {
-    font-family: var(--sans);
-    font-size: 0.98rem;
-    line-height: 1.5;
-    color: var(--ink-soft);
-    margin: 0;
-  }
-  .s-problem-foot {
-    margin-top: 1.8rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--rule);
-    text-align: center;
-  }
-  .s-problem-foot .italic-serif {
-    font-size: clamp(1.05rem, 1.3vw, 1.3rem);
-  }
+      /* ---------- Slide 2: the problem ---------- */
+      /* Headline emphasis is plain ink — italics removed deck-wide. Kept as a
+         no-op rule so any stray <em> in copy inherits cleanly. */
+      .s-problem-headline em {
+        color: inherit;
+        font-style: normal;
+        font-weight: 500;
+      }
+      .s-problem-dek {
+        margin: 1.1rem 0 0 0;
+        max-width: 70ch;
+      }
+      .s-problem-cols {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 1px 1fr 1px 1fr;
+        margin-top: 2.6rem;
+        gap: 0;
+        align-items: stretch;
+      }
+      .s-problem-col {
+        padding: 0 2.2rem;
+        display: flex;
+        flex-direction: column;
+      }
+      .s-problem-col:first-child {
+        padding-left: 0;
+      }
+      .s-problem-col:last-child {
+        padding-right: 0;
+      }
+      .s-problem-vrule {
+        background: var(--rule);
+      }
+      .s-problem-tag {
+        font-family: var(--mono);
+        font-size: 0.66rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1.2rem;
+      }
+      .s-problem-h {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(1.4rem, 2vw, 1.95rem);
+        line-height: 1.05;
+        letter-spacing: -0.005em;
+        margin: 0 0 0.95rem 0;
+        color: var(--ink);
+      }
+      .s-problem-body {
+        font-family: var(--sans);
+        font-size: 0.98rem;
+        line-height: 1.5;
+        color: var(--ink-soft);
+        margin: 0;
+      }
+      .s-problem-foot {
+        margin-top: 1.8rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--rule);
+        text-align: center;
+      }
+      .s-problem-foot .italic-serif {
+        font-size: clamp(1.05rem, 1.3vw, 1.3rem);
+      }
 
-  /* Slide 2 entry stagger */
-  .slide.active .s-problem-tag,
-  .slide.active .s-problem-h,
-  .slide.active .s-problem-body {
-    animation: rise 520ms cubic-bezier(.2,.7,.2,1) both;
-  }
-  .slide.active .s-problem-col:nth-child(1) .s-problem-tag  { animation-delay: 220ms; }
-  .slide.active .s-problem-col:nth-child(1) .s-problem-h    { animation-delay: 260ms; }
-  .slide.active .s-problem-col:nth-child(1) .s-problem-body { animation-delay: 300ms; }
-  .slide.active .s-problem-col:nth-child(3) .s-problem-tag  { animation-delay: 360ms; }
-  .slide.active .s-problem-col:nth-child(3) .s-problem-h    { animation-delay: 400ms; }
-  .slide.active .s-problem-col:nth-child(3) .s-problem-body { animation-delay: 440ms; }
-  .slide.active .s-problem-col:nth-child(5) .s-problem-tag  { animation-delay: 500ms; }
-  .slide.active .s-problem-col:nth-child(5) .s-problem-h    { animation-delay: 540ms; }
-  .slide.active .s-problem-col:nth-child(5) .s-problem-body { animation-delay: 580ms; }
+      /* Slide 2 entry stagger */
+      .slide.active .s-problem-tag,
+      .slide.active .s-problem-h,
+      .slide.active .s-problem-body {
+        animation: rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      }
+      .slide.active .s-problem-col:nth-child(1) .s-problem-tag {
+        animation-delay: 220ms;
+      }
+      .slide.active .s-problem-col:nth-child(1) .s-problem-h {
+        animation-delay: 260ms;
+      }
+      .slide.active .s-problem-col:nth-child(1) .s-problem-body {
+        animation-delay: 300ms;
+      }
+      .slide.active .s-problem-col:nth-child(3) .s-problem-tag {
+        animation-delay: 360ms;
+      }
+      .slide.active .s-problem-col:nth-child(3) .s-problem-h {
+        animation-delay: 400ms;
+      }
+      .slide.active .s-problem-col:nth-child(3) .s-problem-body {
+        animation-delay: 440ms;
+      }
+      .slide.active .s-problem-col:nth-child(5) .s-problem-tag {
+        animation-delay: 500ms;
+      }
+      .slide.active .s-problem-col:nth-child(5) .s-problem-h {
+        animation-delay: 540ms;
+      }
+      .slide.active .s-problem-col:nth-child(5) .s-problem-body {
+        animation-delay: 580ms;
+      }
 
-  /* ---------- Slide 3: what Eigen is ---------- */
-  .s-what-headline em { color: var(--rust); font-style: italic; }
-  .s-what-dek {
-    margin: 1.1rem 0 0 0;
-    max-width: 60ch;
-  }
-  .s-what-cols {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 1px 1fr;
-    margin-top: 3rem;
-    gap: 0;
-  }
-  .s-what-col {
-    padding: 0 3.2rem;
-    display: flex;
-    flex-direction: column;
-  }
-  .s-what-col:first-child { padding-left: 0; }
-  .s-what-col:last-child  { padding-right: 0; }
-  .s-what-divider { background: var(--rule-strong); }
-  .s-what-tag {
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 1.4rem;
-  }
-  .s-what-h {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(1.8rem, 2.8vw, 2.6rem);
-    line-height: 1.05;
-    letter-spacing: -0.008em;
-    margin: 0 0 1.1rem 0;
-  }
-  .s-what-h em { color: var(--rust); font-style: italic; }
-  .s-what-points {
-    list-style: none;
-    margin: 1rem 0 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-  }
-  .s-what-points li {
-    font-family: var(--sans);
-    font-size: 0.98rem;
-    line-height: 1.5;
-    color: var(--ink-soft);
-    padding-left: 1.1rem;
-    position: relative;
-  }
-  .s-what-points li::before {
-    content: "—";
-    position: absolute;
-    left: 0;
-    color: var(--muted-2);
-  }
-  .s-what-points li b {
-    font-weight: 500;
-    color: var(--ink);
-  }
-  .s-what-foot {
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--rule);
-    text-align: center;
-  }
-  .s-what-foot .italic-serif {
-    font-size: clamp(1.05rem, 1.3vw, 1.3rem);
-  }
+      /* ---------- Slide 3: what Eigen is ---------- */
+      .s-what-headline em {
+        color: inherit;
+        font-style: normal;
+        font-weight: 500;
+      }
+      .s-what-dek {
+        margin: 1.1rem 0 0 0;
+        max-width: 60ch;
+      }
+      .s-what-cols {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 1px 1fr;
+        margin-top: 3rem;
+        gap: 0;
+      }
+      .s-what-col {
+        padding: 0 3.2rem;
+        display: flex;
+        flex-direction: column;
+      }
+      .s-what-col:first-child {
+        padding-left: 0;
+      }
+      .s-what-col:last-child {
+        padding-right: 0;
+      }
+      .s-what-divider {
+        background: var(--rule-strong);
+      }
+      .s-what-tag {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1.4rem;
+      }
+      .s-what-h {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(1.8rem, 2.8vw, 2.6rem);
+        line-height: 1.05;
+        letter-spacing: -0.008em;
+        margin: 0 0 1.1rem 0;
+      }
+      .s-what-h em {
+        color: inherit;
+        font-style: normal;
+        font-weight: 500;
+      }
+      .s-what-points {
+        list-style: none;
+        margin: 1rem 0 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+      .s-what-points li {
+        font-family: var(--sans);
+        font-size: 0.98rem;
+        line-height: 1.5;
+        color: var(--ink-soft);
+        padding-left: 1.1rem;
+        position: relative;
+      }
+      .s-what-points li::before {
+        content: "—";
+        position: absolute;
+        left: 0;
+        color: var(--muted-2);
+      }
+      .s-what-points li b {
+        font-weight: 500;
+        color: var(--ink);
+      }
+      .s-what-foot {
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--rule);
+        text-align: center;
+      }
+      .s-what-foot .italic-serif {
+        font-size: clamp(1.05rem, 1.3vw, 1.3rem);
+      }
 
-  /* Slide 2 visualizations */
-  .s-what-viz {
-    margin-top: 1.4rem;
-    padding-top: 1.1rem;
-    border-top: 1px solid var(--rule);
-  }
-  .s-what-viz .viz-cap {
-    font-family: var(--mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 0.85rem;
-  }
+      /* Slide 2 visualizations */
+      .s-what-viz {
+        margin-top: 1.4rem;
+        padding-top: 1.1rem;
+        border-top: 1px solid var(--rule);
+      }
+      .s-what-viz .viz-cap {
+        font-family: var(--mono);
+        font-size: 0.58rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.85rem;
+      }
 
-  /* Bandit re-allocation bars */
-  .viz-bars {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-  }
-  .viz-bars .row {
-    display: grid;
-    grid-template-columns: 1.4em 1fr;
-    column-gap: 0.7rem;
-    align-items: center;
-    font-family: var(--mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .viz-bars .bar {
-    height: 5px;
-    background: #f1ece2;
-    position: relative;
-  }
-  .viz-bars .fill {
-    position: absolute;
-    inset: 0 auto 0 0;
-    background: var(--rust);
-    width: 33%;
-  }
-  .slide.active .viz-bars .fill-a { animation: alloc-a 7s ease-in-out 1.1s infinite; }
-  .slide.active .viz-bars .fill-b { animation: alloc-b 7s ease-in-out 1.1s infinite; }
-  .slide.active .viz-bars .fill-c { animation: alloc-c 7s ease-in-out 1.1s infinite; }
-  @keyframes alloc-a {
-    0%, 100% { width: 33%; }
-    25%      { width: 55%; }
-    50%      { width: 68%; }
-    75%      { width: 28%; }
-  }
-  @keyframes alloc-b {
-    0%, 100% { width: 33%; }
-    25%      { width: 26%; }
-    50%      { width: 20%; }
-    75%      { width: 56%; }
-  }
-  @keyframes alloc-c {
-    0%, 100% { width: 33%; }
-    25%      { width: 19%; }
-    50%      { width: 12%; }
-    75%      { width: 16%; }
-  }
-  /* 3 email-template mockups with a rotating highlight */
-  .viz-templates {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.55rem;
-  }
-  .tmpl {
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    padding: 0.65rem 0.55rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.32rem;
-    min-height: clamp(88px, 12vh, 116px);
-    transition: border-color 240ms ease, transform 240ms ease;
-  }
-  .tmpl .subj {
-    height: 5px;
-    background: var(--ink);
-    transition: background-color 240ms;
-  }
-  .tmpl .line {
-    height: 3px;
-    background: var(--rule-strong);
-  }
-  .tmpl .cta {
-    height: 8px;
-    background: var(--muted-2);
-    margin-top: auto;
-  }
-  /* Per-template proportions so the three feel like distinct drafts */
-  .tmpl-1 .subj { width: 78%; }
-  .tmpl-1 .l1   { width: 92%; }
-  .tmpl-1 .l2   { width: 80%; }
-  .tmpl-1 .l3   { width: 66%; }
-  .tmpl-1 .cta  { width: 32%; }
-  .tmpl-2 .subj { width: 64%; }
-  .tmpl-2 .l1   { width: 88%; }
-  .tmpl-2 .l2   { width: 72%; }
-  .tmpl-2 .l3   { width: 84%; }
-  .tmpl-2 .cta  { width: 28%; }
-  .tmpl-3 .subj { width: 88%; }
-  .tmpl-3 .l1   { width: 76%; }
-  .tmpl-3 .l2   { width: 90%; }
-  .tmpl-3 .l3   { width: 58%; }
-  .tmpl-3 .cta  { width: 38%; }
-  /* Rotating highlight cycles A → B → C */
-  .slide.active .tmpl-1 { animation: tmpl-glow 6s ease-in-out 1.2s infinite; }
-  .slide.active .tmpl-2 { animation: tmpl-glow 6s ease-in-out 3.2s infinite; }
-  .slide.active .tmpl-3 { animation: tmpl-glow 6s ease-in-out 5.2s infinite; }
-  .slide.active .tmpl-1 .subj { animation: subj-glow 6s ease-in-out 1.2s infinite; }
-  .slide.active .tmpl-2 .subj { animation: subj-glow 6s ease-in-out 3.2s infinite; }
-  .slide.active .tmpl-3 .subj { animation: subj-glow 6s ease-in-out 5.2s infinite; }
-  @keyframes tmpl-glow {
-    0%   { border-color: var(--rule);  transform: translateY(0); }
-    8%   { border-color: var(--rust);  transform: translateY(-2px); }
-    30%  { border-color: var(--rust);  transform: translateY(-2px); }
-    40%  { border-color: var(--rule);  transform: translateY(0); }
-    100% { border-color: var(--rule);  transform: translateY(0); }
-  }
-  @keyframes subj-glow {
-    0%   { background: var(--ink); }
-    8%   { background: var(--rust); }
-    30%  { background: var(--rust); }
-    40%  { background: var(--ink); }
-    100% { background: var(--ink); }
-  }
+      /* Bandit re-allocation bars */
+      .viz-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+      }
+      .viz-bars .row {
+        display: grid;
+        grid-template-columns: 1.4em 1fr;
+        column-gap: 0.7rem;
+        align-items: center;
+        font-family: var(--mono);
+        font-size: 0.58rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .viz-bars .bar {
+        height: 5px;
+        background: #f1ece2;
+        position: relative;
+      }
+      .viz-bars .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        background: var(--ink);
+        width: 33%;
+      }
+      .slide.active .viz-bars .fill-a {
+        animation: alloc-a 7s ease-in-out 1.1s infinite;
+      }
+      .slide.active .viz-bars .fill-b {
+        animation: alloc-b 7s ease-in-out 1.1s infinite;
+      }
+      .slide.active .viz-bars .fill-c {
+        animation: alloc-c 7s ease-in-out 1.1s infinite;
+      }
+      @keyframes alloc-a {
+        0%,
+        100% {
+          width: 33%;
+        }
+        25% {
+          width: 55%;
+        }
+        50% {
+          width: 68%;
+        }
+        75% {
+          width: 28%;
+        }
+      }
+      @keyframes alloc-b {
+        0%,
+        100% {
+          width: 33%;
+        }
+        25% {
+          width: 26%;
+        }
+        50% {
+          width: 20%;
+        }
+        75% {
+          width: 56%;
+        }
+      }
+      @keyframes alloc-c {
+        0%,
+        100% {
+          width: 33%;
+        }
+        25% {
+          width: 19%;
+        }
+        50% {
+          width: 12%;
+        }
+        75% {
+          width: 16%;
+        }
+      }
+      /* 3 email-template mockups with a rotating highlight */
+      .viz-templates {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.55rem;
+      }
+      .tmpl {
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        padding: 0.65rem 0.55rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.32rem;
+        min-height: clamp(88px, 12vh, 116px);
+        transition:
+          border-color 240ms ease,
+          transform 240ms ease;
+      }
+      .tmpl .subj {
+        height: 5px;
+        background: var(--ink);
+        transition: background-color 240ms;
+      }
+      .tmpl .line {
+        height: 3px;
+        background: var(--rule-strong);
+      }
+      .tmpl .cta {
+        height: 8px;
+        background: var(--muted-2);
+        margin-top: auto;
+      }
+      /* Per-template proportions so the three feel like distinct drafts */
+      .tmpl-1 .subj {
+        width: 78%;
+      }
+      .tmpl-1 .l1 {
+        width: 92%;
+      }
+      .tmpl-1 .l2 {
+        width: 80%;
+      }
+      .tmpl-1 .l3 {
+        width: 66%;
+      }
+      .tmpl-1 .cta {
+        width: 32%;
+      }
+      .tmpl-2 .subj {
+        width: 64%;
+      }
+      .tmpl-2 .l1 {
+        width: 88%;
+      }
+      .tmpl-2 .l2 {
+        width: 72%;
+      }
+      .tmpl-2 .l3 {
+        width: 84%;
+      }
+      .tmpl-2 .cta {
+        width: 28%;
+      }
+      .tmpl-3 .subj {
+        width: 88%;
+      }
+      .tmpl-3 .l1 {
+        width: 76%;
+      }
+      .tmpl-3 .l2 {
+        width: 90%;
+      }
+      .tmpl-3 .l3 {
+        width: 58%;
+      }
+      .tmpl-3 .cta {
+        width: 38%;
+      }
+      /* Rotating highlight cycles A → B → C */
+      .slide.active .tmpl-1 {
+        animation: tmpl-glow 6s ease-in-out 1.2s infinite;
+      }
+      .slide.active .tmpl-2 {
+        animation: tmpl-glow 6s ease-in-out 3.2s infinite;
+      }
+      .slide.active .tmpl-3 {
+        animation: tmpl-glow 6s ease-in-out 5.2s infinite;
+      }
+      .slide.active .tmpl-1 .subj {
+        animation: subj-glow 6s ease-in-out 1.2s infinite;
+      }
+      .slide.active .tmpl-2 .subj {
+        animation: subj-glow 6s ease-in-out 3.2s infinite;
+      }
+      .slide.active .tmpl-3 .subj {
+        animation: subj-glow 6s ease-in-out 5.2s infinite;
+      }
+      @keyframes tmpl-glow {
+        0% {
+          border-color: var(--rule);
+          transform: translateY(0);
+        }
+        8% {
+          border-color: var(--ink);
+          transform: translateY(-2px);
+        }
+        30% {
+          border-color: var(--ink);
+          transform: translateY(-2px);
+        }
+        40% {
+          border-color: var(--rule);
+          transform: translateY(0);
+        }
+        100% {
+          border-color: var(--rule);
+          transform: translateY(0);
+        }
+      }
+      @keyframes subj-glow {
+        0% {
+          background: var(--muted-2);
+        }
+        8% {
+          background: var(--ink);
+        }
+        30% {
+          background: var(--ink);
+        }
+        40% {
+          background: var(--muted-2);
+        }
+        100% {
+          background: var(--muted-2);
+        }
+      }
 
-  /* Slide 2 entry stagger */
-  .slide.active .s-what-tag,
-  .slide.active .s-what-h,
-  .slide.active .s-what-viz {
-    animation: rise 520ms cubic-bezier(.2,.7,.2,1) both;
-  }
-  .slide.active .s-what-col:first-child .s-what-tag  { animation-delay: 220ms; }
-  .slide.active .s-what-col:first-child .s-what-h    { animation-delay: 260ms; }
-  .slide.active .s-what-col:first-child .body        { animation-delay: 300ms; }
-  .slide.active .s-what-col:first-child .s-what-viz  { animation-delay: 360ms; }
-  .slide.active .s-what-col:last-child .s-what-tag   { animation-delay: 440ms; }
-  .slide.active .s-what-col:last-child .s-what-h     { animation-delay: 480ms; }
-  .slide.active .s-what-col:last-child .body         { animation-delay: 520ms; }
-  .slide.active .s-what-col:last-child .s-what-viz   { animation-delay: 580ms; }
-  .slide.active .s-what-divider {
-    transform-origin: top;
-    animation: divider-grow 700ms cubic-bezier(.2,.7,.2,1) 320ms both;
-  }
-  @keyframes divider-grow {
-    from { transform: scaleY(0); opacity: 0; }
-    to   { transform: scaleY(1); opacity: 1; }
-  }
+      /* Slide 2 entry stagger */
+      .slide.active .s-what-tag,
+      .slide.active .s-what-h,
+      .slide.active .s-what-viz {
+        animation: rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      }
+      .slide.active .s-what-col:first-child .s-what-tag {
+        animation-delay: 220ms;
+      }
+      .slide.active .s-what-col:first-child .s-what-h {
+        animation-delay: 260ms;
+      }
+      .slide.active .s-what-col:first-child .body {
+        animation-delay: 300ms;
+      }
+      .slide.active .s-what-col:first-child .s-what-viz {
+        animation-delay: 360ms;
+      }
+      .slide.active .s-what-col:last-child .s-what-tag {
+        animation-delay: 440ms;
+      }
+      .slide.active .s-what-col:last-child .s-what-h {
+        animation-delay: 480ms;
+      }
+      .slide.active .s-what-col:last-child .body {
+        animation-delay: 520ms;
+      }
+      .slide.active .s-what-col:last-child .s-what-viz {
+        animation-delay: 580ms;
+      }
+      .slide.active .s-what-divider {
+        transform-origin: top;
+        animation: divider-grow 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 320ms both;
+      }
+      @keyframes divider-grow {
+        from {
+          transform: scaleY(0);
+          opacity: 0;
+        }
+        to {
+          transform: scaleY(1);
+          opacity: 1;
+        }
+      }
 
-  /* ---------- Slide 3: demo ---------- */
-  .s2 {
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
-  .s2-watermark {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: 60vh;
-    color: var(--rule);
-    line-height: 1;
-    user-select: none;
-    pointer-events: none;
-  }
-  .s2-content {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.4rem;
-  }
-  .s2-content .h-display {
-    font-size: clamp(4rem, 8vw, 7.5rem);
-  }
-  .s2-content .label { letter-spacing: 0.32em; }
+      /* ---------- Slide 3: demo ---------- */
+      .s2 {
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .s2-watermark {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 60vh;
+        color: var(--rule);
+        line-height: 1;
+        user-select: none;
+        pointer-events: none;
+      }
+      .s2-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.4rem;
+      }
+      .s2-content .h-display {
+        font-size: clamp(4rem, 8vw, 7.5rem);
+      }
+      .s2-content .label {
+        letter-spacing: 0.32em;
+      }
 
-  /* ---------- Slide 3: founders ---------- */
-  .s3-body {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 1px 1fr;
-    gap: 0;
-    margin-top: 4rem;
-  }
-  .s3-col {
-    padding: 0 3.2rem;
-    display: flex;
-    flex-direction: column;
-  }
-  .s3-col:first-child { padding-left: 0; }
-  .s3-col:last-child  { padding-right: 0; }
-  .s3-divider {
-    background: var(--rule-strong);
-  }
-  .s3-portrait {
-    width: clamp(96px, 9.5vw, 132px);
-    aspect-ratio: 1 / 1;
-    margin-bottom: 1.4rem;
-    overflow: hidden;
-    border: 1px solid var(--rule-strong);
-    background: var(--rule);
-  }
-  .s3-portrait img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .s3-name {
-    font-family: var(--serif);
-    font-size: clamp(1.8rem, 2.4vw, 2.4rem);
-    font-weight: 400;
-    line-height: 1.05;
-    margin: 0 0 0.35rem 0;
-    letter-spacing: -0.005em;
-  }
-  .s3-role {
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 1.6rem;
-  }
-  .s3-bullets {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.95rem;
-  }
-  .s3-bullets li {
-    font-family: var(--sans);
-    font-size: 1rem;
-    line-height: 1.5;
-    color: var(--ink-soft);
-    padding-left: 1.1rem;
-    position: relative;
-  }
-  .s3-bullets li::before {
-    content: "—";
-    position: absolute;
-    left: 0;
-    color: var(--muted-2);
-  }
-  .s3-bullets li b {
-    font-weight: 500;
-    color: var(--ink);
-  }
-  .s3-logos {
-    margin-top: auto;
-    padding-top: 1.6rem;
-  }
-  .s3-logos-label {
-    font-family: var(--mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 0.95rem;
-  }
-  .s3-logos-row {
-    display: flex;
-    align-items: center;
-    gap: 1.6rem;
-    flex-wrap: wrap;
-    min-height: clamp(22px, 2.6vh, 30px);
-  }
-  .s3-logos-row img {
-    height: clamp(20px, 2.4vh, 26px);
-    width: auto;
-    max-width: 110px;
-    object-fit: contain;
-  }
-  .s3-foot {
-    margin-top: 3rem;
-    padding-top: 1.1rem;
-    border-top: 1px solid var(--rule);
-    text-align: center;
-  }
-  .s3-foot .italic-serif {
-    font-size: clamp(1.05rem, 1.3vw, 1.3rem);
-    color: var(--ink-soft);
-  }
+      /* ---------- Slide 3: founders ---------- */
+      .s3-body {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 1px 1fr;
+        gap: 0;
+        margin-top: 4rem;
+      }
+      .s3-col {
+        padding: 0 3.2rem;
+        display: flex;
+        flex-direction: column;
+      }
+      .s3-col:first-child {
+        padding-left: 0;
+      }
+      .s3-col:last-child {
+        padding-right: 0;
+      }
+      .s3-divider {
+        background: var(--rule-strong);
+      }
+      .s3-portrait {
+        width: clamp(96px, 9.5vw, 132px);
+        aspect-ratio: 1 / 1;
+        margin-bottom: 1.4rem;
+        overflow: hidden;
+        border: 1px solid var(--rule-strong);
+        background: var(--rule);
+      }
+      .s3-portrait img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .s3-name {
+        font-family: var(--serif);
+        font-size: clamp(1.8rem, 2.4vw, 2.4rem);
+        font-weight: 400;
+        line-height: 1.05;
+        margin: 0 0 0.35rem 0;
+        letter-spacing: -0.005em;
+      }
+      .s3-role {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1.6rem;
+      }
+      .s3-bullets {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.95rem;
+      }
+      .s3-bullets li {
+        font-family: var(--sans);
+        font-size: 1rem;
+        line-height: 1.5;
+        color: var(--ink-soft);
+        padding-left: 1.1rem;
+        position: relative;
+      }
+      .s3-bullets li::before {
+        content: "—";
+        position: absolute;
+        left: 0;
+        color: var(--muted-2);
+      }
+      .s3-bullets li b {
+        font-weight: 500;
+        color: var(--ink);
+      }
+      .s3-logos {
+        margin-top: auto;
+        padding-top: 1.6rem;
+      }
+      .s3-logos-label {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.95rem;
+      }
+      .s3-logos-row {
+        display: flex;
+        align-items: center;
+        gap: 1.6rem;
+        flex-wrap: wrap;
+        min-height: clamp(22px, 2.6vh, 30px);
+      }
+      .s3-logos-row img {
+        height: clamp(20px, 2.4vh, 26px);
+        width: auto;
+        max-width: 110px;
+        object-fit: contain;
+      }
+      .s3-foot {
+        margin-top: 3rem;
+        padding-top: 1.1rem;
+        border-top: 1px solid var(--rule);
+        text-align: center;
+      }
+      .s3-foot .italic-serif {
+        font-size: clamp(1.05rem, 1.3vw, 1.3rem);
+        color: var(--ink-soft);
+      }
 
-  /* ---------- Slide 4: market (idea potential — editorial financial spread) ---------- */
-  .s4-headline {
-    font-family: var(--serif);
-    font-size: clamp(1.7rem, 2.7vw, 2.5rem);
-    line-height: 1.05;
-    letter-spacing: -0.01em;
-    margin: 0.9rem 0 0.55rem 0;
-    font-weight: 400;
-    white-space: nowrap;
-  }
-  .s4-headline em { color: var(--rust); font-style: italic; }
-  .s4-dek {
-    font-family: var(--sans);
-    font-size: clamp(0.85rem, 0.95vw, 0.98rem);
-    color: var(--muted);
-    line-height: 1.45;
-    margin: 0;
-    font-weight: 400;
-    white-space: nowrap;
-  }
+      /* ---------- Slide 4: market (idea potential — editorial financial spread) ---------- */
+      .s4-headline {
+        font-family: var(--serif);
+        font-size: clamp(1.7rem, 2.7vw, 2.5rem);
+        line-height: 1.05;
+        letter-spacing: -0.01em;
+        margin: 0.9rem 0 0.55rem 0;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+      .s4-headline em {
+        color: inherit;
+        font-style: normal;
+        font-weight: 500;
+      }
+      .s4-dek {
+        font-family: var(--sans);
+        font-size: clamp(0.85rem, 0.95vw, 0.98rem);
+        color: var(--muted);
+        line-height: 1.45;
+        margin: 0;
+        font-weight: 400;
+        white-space: nowrap;
+      }
 
-  .s4-cols {
-    flex: 1;
-    margin-top: 1.6rem;
-    display: grid;
-    grid-template-columns: 1fr 1px 1fr 1px 1fr;
-    gap: 0;
-    align-items: stretch;
-  }
-  .s4-vrule { background: var(--rule); }
-  .s4-col {
-    padding: 0 1.9rem;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-  .s4-col:first-child { padding-left: 0; }
-  .s4-col:last-child  { padding-right: 0; }
-  .s4-col-tag {
-    font-family: var(--mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 1.3rem;
-  }
-  .s4-bignum {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(2.4rem, 4.4vw, 4.2rem);
-    line-height: 1;
-    letter-spacing: -0.022em;
-    color: var(--ink);
-    margin: 0 0 0.65rem 0;
-  }
-  .s4-bignum.accent { color: var(--rust); }
-  .s4-bignum .unit {
-    font-size: 0.62em;
-    letter-spacing: -0.005em;
-    margin-left: 0.02em;
-  }
-  .s4-col-cap {
-    font-family: var(--mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted);
-    line-height: 1.5;
-    white-space: nowrap;
-  }
-  .s4-col-sub {
-    font-family: var(--serif);
-    font-size: clamp(0.95rem, 1.05vw, 1.1rem);
-    color: var(--ink-soft);
-    margin-top: 1rem;
-    letter-spacing: -0.005em;
-  }
-  .s4-col-cap-sm {
-    font-family: var(--mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-top: 0.35rem;
-  }
-  .s4-col-foot {
-    margin-top: auto;
-    padding-top: 0.85rem;
-    border-top: 1px solid var(--rule);
-    font-family: var(--mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--muted-2);
-  }
+      .s4-cols {
+        flex: 1;
+        margin-top: 1.6rem;
+        display: grid;
+        grid-template-columns: 1fr 1px 1fr 1px 1fr;
+        gap: 0;
+        align-items: stretch;
+      }
+      .s4-vrule {
+        background: var(--rule);
+      }
+      .s4-col {
+        padding: 0 1.9rem;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .s4-col:first-child {
+        padding-left: 0;
+      }
+      .s4-col:last-child {
+        padding-right: 0;
+      }
+      .s4-col-tag {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1.3rem;
+      }
+      .s4-bignum {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(2.4rem, 4.4vw, 4.2rem);
+        line-height: 1;
+        letter-spacing: -0.022em;
+        color: var(--ink);
+        margin: 0 0 0.65rem 0;
+      }
+      .s4-bignum.accent {
+        color: var(--rust);
+      }
+      .s4-bignum .unit {
+        font-size: 0.62em;
+        letter-spacing: -0.005em;
+        margin-left: 0.02em;
+      }
+      .s4-col-cap {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--muted);
+        line-height: 1.5;
+        white-space: nowrap;
+      }
+      .s4-col-sub {
+        font-family: var(--serif);
+        font-size: clamp(0.95rem, 1.05vw, 1.1rem);
+        color: var(--ink-soft);
+        margin-top: 1rem;
+        letter-spacing: -0.005em;
+      }
+      .s4-col-cap-sm {
+        font-family: var(--mono);
+        font-size: 0.58rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: 0.35rem;
+      }
+      .s4-col-foot {
+        margin-top: auto;
+        padding-top: 0.85rem;
+        border-top: 1px solid var(--rule);
+        font-family: var(--mono);
+        font-size: 0.58rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted-2);
+      }
 
-  /* Column 2: channel ROI bar chart */
-  .s4-bars {
-    display: grid;
-    grid-template-columns: 5.4em 1fr 5em;
-    column-gap: 0.65rem;
-    row-gap: 0.55rem;
-    align-items: center;
-    margin: 1rem 0 0.75rem 0;
-    font-family: var(--mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
-  .s4-bars .bar-val { white-space: nowrap; }
-  .s4-bars .bar-lab { color: var(--muted); }
-  .s4-bars .bar-val { color: var(--muted); justify-self: end; }
-  .s4-bars .bar {
-    height: 6px;
-    background: #f1ece2;
-    position: relative;
-  }
-  .s4-bars .bar .fill {
-    position: absolute;
-    inset: 0 auto 0 0;
-    background: var(--muted-2);
-    min-width: 3px;
-  }
-  .s4-bars .row-accent .bar-lab,
-  .s4-bars .row-accent .bar-val { color: var(--ink); }
-  .s4-bars .row-accent .bar .fill { background: var(--rust); }
+      /* Column 2: channel ROI bar chart */
+      .s4-bars {
+        display: grid;
+        grid-template-columns: 5.4em 1fr 5em;
+        column-gap: 0.65rem;
+        row-gap: 0.55rem;
+        align-items: center;
+        margin: 1rem 0 0.75rem 0;
+        font-family: var(--mono);
+        font-size: 0.58rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+      .s4-bars .bar-val {
+        white-space: nowrap;
+      }
+      .s4-bars .bar-lab {
+        color: var(--muted);
+      }
+      .s4-bars .bar-val {
+        color: var(--muted);
+        justify-self: end;
+      }
+      .s4-bars .bar {
+        height: 6px;
+        background: #f1ece2;
+        position: relative;
+      }
+      .s4-bars .bar .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        background: var(--muted-2);
+        min-width: 3px;
+      }
+      .s4-bars .row-accent .bar-lab,
+      .s4-bars .row-accent .bar-val {
+        color: var(--ink);
+      }
+      .s4-bars .row-accent .bar .fill {
+        background: var(--ink);
+      }
 
-  /* Column 3: stacked stats */
-  .s4-stats {
-    margin-top: 1rem;
-    display: flex;
-    flex-direction: column;
-  }
-  .s4-stat {
-    display: grid;
-    grid-template-columns: 4.6em 1fr;
-    column-gap: 0.9rem;
-    align-items: baseline;
-    padding: 0.7rem 0;
-    border-bottom: 1px solid var(--rule);
-  }
-  .s4-stat:first-child { padding-top: 0; }
-  .s4-stat:last-child  { border-bottom: 0; padding-bottom: 0; }
-  .s4-stat .num {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(1.2rem, 1.55vw, 1.55rem);
-    letter-spacing: -0.008em;
-    color: var(--ink);
-    line-height: 1;
-  }
-  .s4-stat .lab {
-    font-family: var(--mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted);
-    line-height: 1.45;
-  }
+      /* Column 3: stacked stats */
+      .s4-stats {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+      }
+      .s4-stat {
+        display: grid;
+        grid-template-columns: 4.6em 1fr;
+        column-gap: 0.9rem;
+        align-items: baseline;
+        padding: 0.7rem 0;
+        border-bottom: 1px solid var(--rule);
+      }
+      .s4-stat:first-child {
+        padding-top: 0;
+      }
+      .s4-stat:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+      .s4-stat .num {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(1.2rem, 1.55vw, 1.55rem);
+        letter-spacing: -0.008em;
+        color: var(--ink);
+        line-height: 1;
+      }
+      .s4-stat .lab {
+        font-family: var(--mono);
+        font-size: 0.58rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--muted);
+        line-height: 1.45;
+      }
 
-  /* Bottom band: wedge logic */
-  .s4-bottom {
-    margin-top: 1.4rem;
-    border-top: 1px solid var(--rule);
-    padding-top: 1rem;
-  }
-  .s4-bottom-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 2rem;
-  }
-  .s4-bottom-grid .italic-serif {
-    font-size: clamp(0.82rem, 0.92vw, 0.95rem);
-    line-height: 1.45;
-    color: var(--ink-soft);
-    white-space: nowrap;
-  }
-  .s4-flow {
-    margin-top: 0.95rem;
-    text-align: center;
-    font-family: var(--mono);
-    font-size: 0.66rem;
-    letter-spacing: 0.32em;
-    text-transform: uppercase;
-    color: var(--ink);
-  }
-  .s4-flow .chev {
-    color: var(--rust);
-    margin: 0 0.55em;
-    font-style: normal;
-  }
-  .s4-sources {
-    margin-top: 0.85rem;
-    font-family: var(--mono);
-    font-size: 0.55rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted-2);
-  }
+      /* Bottom band: wedge logic */
+      .s4-bottom {
+        margin-top: 1.4rem;
+        border-top: 1px solid var(--rule);
+        padding-top: 1rem;
+      }
+      .s4-bottom-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 2rem;
+      }
+      .s4-bottom-grid .italic-serif {
+        font-size: clamp(0.82rem, 0.92vw, 0.95rem);
+        line-height: 1.45;
+        color: var(--ink-soft);
+        white-space: nowrap;
+      }
+      .s4-flow {
+        margin-top: 0.95rem;
+        text-align: center;
+        font-family: var(--mono);
+        font-size: 0.66rem;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--ink);
+      }
+      .s4-flow .chev {
+        color: var(--muted-2);
+        margin: 0 0.55em;
+        font-style: normal;
+      }
+      .s4-sources {
+        margin-top: 0.85rem;
+        font-family: var(--mono);
+        font-size: 0.55rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--muted-2);
+      }
 
-  /* ---------- Slide 5: validation ---------- */
-  .s5-headline {
-    margin: 3rem 0 0 0;
-    max-width: 18ch;
-  }
-  .s5-precommit {
-    margin-top: auto;
-    text-align: center;
-  }
-  .s5-precommit .italic-serif {
-    font-size: clamp(1.6rem, 2.4vw, 2.2rem);
-    color: var(--ink);
-  }
-  .s5-precommit-sub {
-    margin-top: 0.9rem;
-    letter-spacing: 0.32em;
-  }
-  .s5-tiles {
-    margin-top: auto;
-    display: grid;
-    grid-template-columns: 1fr 1px 1fr 1px 1fr 1px 1fr;
-    border-top: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
-  }
-  .s5-tile {
-    /* Pure white tile so logos with white backgrounds blend without
+      /* ---------- Slide 5: validation ---------- */
+      .s5-headline {
+        max-width: 18ch;
+      }
+      .s5-precommit {
+        margin-top: auto;
+        text-align: center;
+      }
+      .s5-precommit .italic-serif {
+        font-size: clamp(1.6rem, 2.4vw, 2.2rem);
+        color: var(--ink);
+      }
+      .s5-precommit-sub {
+        margin-top: 0.9rem;
+        letter-spacing: 0.32em;
+      }
+      .s5-tiles {
+        margin-top: auto;
+        display: grid;
+        grid-template-columns: 1fr 1px 1fr 1px 1fr 1px 1fr;
+        border-top: 1px solid var(--rule);
+        border-bottom: 1px solid var(--rule);
+      }
+      .s5-tile {
+        /* Pure white tile so logos with white backgrounds blend without
        any visible JPEG/PNG edges. */
-    background: #ffffff;
-    padding: 2.4rem 1.2rem 2rem;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1.1rem;
-    min-height: clamp(180px, 22vh, 230px);
-  }
-  .s5-logo {
-    /* Fixed-height "slot" so three differently-shaped logos sit on the
+        background: #ffffff;
+        padding: 2.4rem 1.2rem 2rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.1rem;
+        min-height: clamp(180px, 22vh, 230px);
+      }
+      .s5-logo {
+        /* Fixed-height "slot" so three differently-shaped logos sit on the
        same baseline and read as a single editorial logo bar. */
-    height: clamp(72px, 9.5vh, 100px);
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .s5-logo img {
-    display: block;
-    object-fit: contain;
-    max-height: 100%;
-    max-width: 80%;
-  }
-  /* Per-logo optical balancing — different shapes need different caps so
+        height: clamp(72px, 9.5vh, 100px);
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .s5-logo img {
+        display: block;
+        object-fit: contain;
+        max-height: 100%;
+        max-width: 80%;
+      }
+      /* Per-logo optical balancing — different shapes need different caps so
      they feel weighted equally, not mathematically equal. */
-  .s5-logo img.logo-replay {
-    /* Wide horizontal wordmark — height-capped so it doesn't dominate. */
-    max-height: 58%;
-    max-width: 92%;
-  }
-  .s5-logo img.logo-leland {
-    /* Square stacked mark+wordmark — fills the slot vertically. */
-    max-height: 100%;
-    max-width: 56%;
-  }
-  .s5-logo img.logo-salesforce {
-    /* Cloud silhouette — slightly under the slot height for breathing room. */
-    max-height: 88%;
-    max-width: 62%;
-  }
-  .s5-logo img.logo-stash {
-    /* Wordmark — height-capped to sit on the same baseline as the others. */
-    max-height: 62%;
-    max-width: 80%;
-  }
-  .s5-tile .tag {
-    font-family: var(--mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .s5-vrule { background: var(--rule); }
-  .s5-foot {
-    margin-top: 1.6rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
-  .s5-foot .lead {
-    font-family: var(--serif);
-    font-size: 1.15rem;
-    color: var(--ink);
-  }
+      .s5-logo img.logo-replay {
+        /* Wide horizontal wordmark — height-capped so it doesn't dominate. */
+        max-height: 58%;
+        max-width: 92%;
+      }
+      .s5-logo img.logo-leland {
+        /* Square stacked mark+wordmark — fills the slot vertically. */
+        max-height: 100%;
+        max-width: 56%;
+      }
+      .s5-logo img.logo-salesforce {
+        /* Cloud silhouette — slightly under the slot height for breathing room. */
+        max-height: 88%;
+        max-width: 62%;
+      }
+      .s5-logo img.logo-stash {
+        /* Wordmark — height-capped to sit on the same baseline as the others. */
+        max-height: 62%;
+        max-width: 80%;
+      }
+      .s5-tile .tag {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .s5-vrule {
+        background: var(--rule);
+      }
+      .s5-foot {
+        margin-top: 1.6rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .s5-foot .lead {
+        font-family: var(--serif);
+        font-size: 1.15rem;
+        color: var(--ink);
+      }
 
-  /* ---------- Slide 6: quality / brand ---------- */
-  .s6-headline {
-    margin: 3rem 0 0 0;
-  }
-  .s6-grid {
-    margin-top: auto;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: 1fr 1fr;
-    gap: 1px;
-    background: var(--rule-strong);
-    border: 1px solid var(--rule-strong);
-    aspect-ratio: 3 / 1.05;
-    width: 100%;
-  }
-  .s6-tile {
-    background: var(--paper);
-    padding: 1.4rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    position: relative;
-    overflow: hidden;
-  }
-  .s6-tile .cap {
-    font-family: var(--mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--ink);
-    z-index: 2;
-    position: relative;
-  }
-  .s6-tile .vis {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-  }
-  .s6-tile.editorial .vis {
-    background:
-      linear-gradient(180deg, #f4efe6, #ece5d6 60%, #d9cfba);
-  }
-  .s6-tile.editorial .vis::before {
-    content: "Aa";
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    font-family: var(--serif);
-    font-size: 8rem;
-    line-height: 1;
-    color: rgba(22,20,18,0.85);
-    font-style: italic;
-  }
-  .s6-tile.math .vis {
-    background: #1a1815;
-  }
-  .s6-tile.math .vis::before {
-    content: "λ x . f(x)";
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    font-family: var(--mono);
-    font-size: 1.4rem;
-    color: #efe6d4;
-    letter-spacing: 0.06em;
-  }
-  .s6-tile.math .cap { color: #efe6d4; }
-  .s6-tile.monet .vis {
-    /* Mood-board painting. Swap to parliament-sunset.jpg / parliament-stormy.jpg
+      /* ---------- Slide 6: quality / brand ---------- */
+      .s6-headline {
+        margin: 0;
+      }
+      .s6-grid {
+        margin-top: auto;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: 1fr 1fr;
+        gap: 1px;
+        background: var(--rule-strong);
+        border: 1px solid var(--rule-strong);
+        aspect-ratio: 3 / 1.05;
+        width: 100%;
+      }
+      .s6-tile {
+        background: var(--paper);
+        padding: 1.4rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        position: relative;
+        overflow: hidden;
+      }
+      .s6-tile .cap {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--ink);
+        z-index: 2;
+        position: relative;
+      }
+      .s6-tile .vis {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+      }
+      .s6-tile.editorial .vis {
+        background: linear-gradient(180deg, #f4efe6, #ece5d6 60%, #d9cfba);
+      }
+      .s6-tile.editorial .vis::before {
+        content: "Aa";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-family: var(--serif);
+        font-size: 8rem;
+        line-height: 1;
+        color: rgba(22, 20, 18, 0.85);
+        font-style: italic;
+      }
+      .s6-tile.math .vis {
+        background: #1a1815;
+      }
+      .s6-tile.math .vis::before {
+        content: "λ x . f(x)";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+        font-size: 1.4rem;
+        color: #efe6d4;
+        letter-spacing: 0.06em;
+      }
+      .s6-tile.math .cap {
+        color: #efe6d4;
+      }
+      .s6-tile.monet .vis {
+        /* Mood-board painting. Swap to parliament-sunset.jpg / parliament-stormy.jpg
        to change the tile. Gradient below acts as the fallback. */
-    background:
-      url('assets/monet/parliament-fog.jpg') center / cover no-repeat,
-      radial-gradient(60% 50% at 30% 35%, rgba(255, 198, 140, 0.6), transparent 70%),
-      radial-gradient(70% 60% at 70% 70%, rgba(178, 90, 60, 0.5), transparent 70%),
-      radial-gradient(80% 70% at 50% 90%, rgba(94, 116, 136, 0.65), transparent 75%),
-      linear-gradient(180deg, #d6c4ad 0%, #b09478 50%, #4f5b6c 100%);
-  }
-  .s6-tile.monet .cap { color: #fff; }
-  .s6-tile.pairing .vis {
-    background: var(--paper);
-  }
-  .s6-tile.pairing .vis::before {
-    content: "Eigen";
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    font-family: var(--serif);
-    font-size: 4rem;
-    color: var(--ink);
-    letter-spacing: -0.01em;
-  }
-  .s6-tile.pairing .vis::after {
-    content: "EIGEN";
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    font-family: var(--mono);
-    font-size: 0.9rem;
-    color: var(--muted);
-    letter-spacing: 0.4em;
-    transform: translateY(3.2rem);
-  }
-  .s6-tile.restraint .vis {
-    background: #fdfcf9;
-  }
-  .s6-tile.restraint .vis::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 18%;
-    right: 18%;
-    height: 1px;
-    background: var(--ink);
-  }
-  .s6-tile.gallery .vis {
-    background: linear-gradient(180deg, #efe6d4 0%, #cbb798 100%);
-  }
-  .s6-tile.gallery .vis::before {
-    content: "";
-    position: absolute;
-    inset: 18% 22%;
-    border: 1px solid rgba(22,20,18,0.25);
-    background: rgba(255,255,255,0.35);
-  }
+        background:
+          url("assets/monet/parliament-fog.jpg") center / cover no-repeat,
+          radial-gradient(
+            60% 50% at 30% 35%,
+            rgba(255, 198, 140, 0.6),
+            transparent 70%
+          ),
+          radial-gradient(
+            70% 60% at 70% 70%,
+            rgba(178, 90, 60, 0.5),
+            transparent 70%
+          ),
+          radial-gradient(
+            80% 70% at 50% 90%,
+            rgba(94, 116, 136, 0.65),
+            transparent 75%
+          ),
+          linear-gradient(180deg, #d6c4ad 0%, #b09478 50%, #4f5b6c 100%);
+      }
+      .s6-tile.monet .cap {
+        color: #fff;
+      }
+      .s6-tile.pairing .vis {
+        background: var(--paper);
+      }
+      .s6-tile.pairing .vis::before {
+        content: "Eigen";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-family: var(--serif);
+        font-size: 4rem;
+        color: var(--ink);
+        letter-spacing: -0.01em;
+      }
+      .s6-tile.pairing .vis::after {
+        content: "EIGEN";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+        font-size: 0.9rem;
+        color: var(--muted);
+        letter-spacing: 0.4em;
+        transform: translateY(3.2rem);
+      }
+      .s6-tile.restraint .vis {
+        background: #fdfcf9;
+      }
+      .s6-tile.restraint .vis::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 18%;
+        right: 18%;
+        height: 1px;
+        background: var(--ink);
+      }
+      .s6-tile.gallery .vis {
+        background: linear-gradient(180deg, #efe6d4 0%, #cbb798 100%);
+      }
+      .s6-tile.gallery .vis::before {
+        content: "";
+        position: absolute;
+        inset: 18% 22%;
+        border: 1px solid rgba(22, 20, 18, 0.25);
+        background: rgba(255, 255, 255, 0.35);
+      }
 
-  /* ---------- Slide 8: architecture ---------- */
-  .s-arch-headline em { color: var(--rust); font-style: italic; }
-  .s-arch-dek {
-    margin: 1.1rem 0 0 0;
-    max-width: 60ch;
-  }
-  .s-arch-stack {
-    margin-top: auto;
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 1px;
-    background: var(--rule-strong);
-    border: 1px solid var(--rule-strong);
-  }
-  .s-arch-cell {
-    background: var(--paper);
-    padding: 1.4rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-    min-height: clamp(210px, 28vh, 270px);
-  }
-  .s-arch-logo {
-    height: clamp(26px, 3.4vh, 34px);
-    margin-bottom: 0.4rem;
-    display: flex;
-    align-items: center;
-  }
-  .s-arch-logo img {
-    max-height: 100%;
-    max-width: 100%;
-    width: auto;
-    object-fit: contain;
-    display: block;
-  }
-  /* Per-logo optical balancing — wordmarks vs icon-marks need different caps. */
-  .s-arch-logo img.logo-nextjs    { max-width: 96px; }
-  .s-arch-logo img.logo-clerk     { max-width: 96px; }
-  .s-arch-logo img.logo-fastapi   { max-width: 110px; }
-  .s-arch-logo img.logo-postgres  { max-width: 38px; }
-  .s-arch-logo img.logo-anthropic { max-width: 110px; }
-  .s-arch-logo img.logo-resend    { max-width: 92px; }
-  .s-arch-tag {
-    font-family: var(--mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .s-arch-name {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(1.4rem, 1.9vw, 1.9rem);
-    letter-spacing: -0.005em;
-    line-height: 1.05;
-    color: var(--ink);
-  }
-  .s-arch-role {
-    font-family: var(--sans);
-    font-size: 0.88rem;
-    line-height: 1.45;
-    color: var(--ink-soft);
-    margin-top: auto;
-  }
-  .s-arch-foot {
-    margin-top: 1.4rem;
-    text-align: center;
-  }
-  .s-arch-foot .italic-serif {
-    font-size: clamp(1rem, 1.2vw, 1.2rem);
-  }
+      /* ---------- Slide 8: architecture ---------- */
+      .s-arch-headline em {
+        color: inherit;
+        font-style: normal;
+        font-weight: 500;
+      }
+      .s-arch-dek {
+        margin: 1.1rem 0 0 0;
+        max-width: 60ch;
+      }
+      .s-arch-stack {
+        margin-top: auto;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 1px;
+        background: var(--rule-strong);
+        border: 1px solid var(--rule-strong);
+      }
+      .s-arch-cell {
+        background: var(--paper);
+        padding: 1.4rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        min-height: clamp(210px, 28vh, 270px);
+      }
+      .s-arch-logo {
+        height: clamp(26px, 3.4vh, 34px);
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+      }
+      .s-arch-logo img {
+        max-height: 100%;
+        max-width: 100%;
+        width: auto;
+        object-fit: contain;
+        display: block;
+      }
+      /* Per-logo optical balancing — wordmarks vs icon-marks need different caps. */
+      .s-arch-logo img.logo-nextjs {
+        max-width: 96px;
+      }
+      .s-arch-logo img.logo-clerk {
+        max-width: 96px;
+      }
+      .s-arch-logo img.logo-fastapi {
+        max-width: 110px;
+      }
+      .s-arch-logo img.logo-postgres {
+        max-width: 38px;
+      }
+      .s-arch-logo img.logo-anthropic {
+        max-width: 110px;
+      }
+      .s-arch-logo img.logo-resend {
+        max-width: 92px;
+      }
+      .s-arch-tag {
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .s-arch-name {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(1.4rem, 1.9vw, 1.9rem);
+        letter-spacing: -0.005em;
+        line-height: 1.05;
+        color: var(--ink);
+      }
+      .s-arch-role {
+        font-family: var(--sans);
+        font-size: 0.88rem;
+        line-height: 1.45;
+        color: var(--ink-soft);
+        margin-top: auto;
+      }
+      .s-arch-foot {
+        margin-top: 1.4rem;
+        text-align: center;
+      }
+      .s-arch-foot .italic-serif {
+        font-size: clamp(1rem, 1.2vw, 1.2rem);
+      }
 
-  /* ---------- Slide 9: the loop ---------- */
-  .s-loop-headline em { color: var(--rust); font-style: italic; }
-  .s-loop-dek {
-    margin: 1.1rem 0 0 0;
-    white-space: nowrap;
-  }
-  .s-loop-diagram {
-    margin-top: auto;
-    position: relative;
-  }
-  .s-loop-row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1fr;
-    align-items: stretch;
-    gap: 0.4rem;
-  }
-  .s-loop-node {
-    background: var(--paper);
-    border: 1px solid var(--rule-strong);
-    padding: 1rem 0.9rem;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-    min-height: clamp(96px, 11vh, 120px);
-    justify-content: center;
-  }
-  .s-loop-node.accent {
-    border-color: var(--ink);
-  }
-  .s-loop-node .t {
-    font-family: var(--mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.22em;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-  .s-loop-node .n {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(0.95rem, 1.1vw, 1.15rem);
-    line-height: 1.15;
-    color: var(--ink);
-    letter-spacing: -0.005em;
-  }
-  .s-loop-arrow {
-    display: flex;
-    align-items: center;
-    color: var(--muted-2);
-    font-family: var(--mono);
-    font-size: 0.95rem;
-  }
-  .s-loop-arcs {
-    width: 100%;
-    height: clamp(110px, 16vh, 160px);
-    display: block;
-    margin-top: -0.2rem;
-  }
-  .s-loop-legends {
-    display: flex;
-    gap: 2.4rem;
-    justify-content: center;
-    margin-top: 0.4rem;
-  }
-  .s-loop-legend {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    font-family: var(--mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--ink);
-  }
-  .s-loop-legend .swatch {
-    width: 22px;
-    height: 2px;
-    background: var(--rust);
-  }
-  .s-loop-legend .swatch.slate {
-    background: var(--slate);
-    background-image: linear-gradient(90deg, var(--slate) 50%, transparent 50%);
-    background-size: 6px 2px;
-    background-color: transparent;
-  }
+      /* ---------- Slide 9: the loop ---------- */
+      .s-loop-headline em {
+        color: inherit;
+        font-style: normal;
+        font-weight: 500;
+      }
+      .s-loop-dek {
+        margin: 1.1rem 0 0 0;
+        white-space: nowrap;
+      }
+      .s-loop-diagram {
+        margin-top: auto;
+        position: relative;
+      }
+      .s-loop-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1fr;
+        align-items: stretch;
+        gap: 0.4rem;
+      }
+      .s-loop-node {
+        background: var(--paper);
+        border: 1px solid var(--rule-strong);
+        padding: 1rem 0.9rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        min-height: clamp(96px, 11vh, 120px);
+        justify-content: center;
+      }
+      .s-loop-node.accent {
+        border-color: var(--ink);
+      }
+      .s-loop-node .t {
+        font-family: var(--mono);
+        font-size: 0.58rem;
+        letter-spacing: 0.22em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      .s-loop-node .n {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(0.95rem, 1.1vw, 1.15rem);
+        line-height: 1.15;
+        color: var(--ink);
+        letter-spacing: -0.005em;
+      }
+      .s-loop-arrow {
+        display: flex;
+        align-items: center;
+        color: var(--muted-2);
+        font-family: var(--mono);
+        font-size: 0.95rem;
+      }
+      .s-loop-arcs {
+        width: 100%;
+        height: clamp(110px, 16vh, 160px);
+        display: block;
+        margin-top: -0.2rem;
+      }
+      .s-loop-legends {
+        display: flex;
+        gap: 2.4rem;
+        justify-content: center;
+        margin-top: 0.4rem;
+      }
+      .s-loop-legend {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-family: var(--mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--ink);
+      }
+      .s-loop-legend .swatch {
+        width: 22px;
+        height: 2px;
+        background: var(--rust);
+      }
+      .s-loop-legend .swatch.slate {
+        background: var(--slate);
+        background-image: linear-gradient(
+          90deg,
+          var(--slate) 50%,
+          transparent 50%
+        );
+        background-size: 6px 2px;
+        background-color: transparent;
+      }
 
-  /* ---------- Slide 7: build (stub — mirrors s2) ---------- */
-  .s7 {
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
-  .s7-watermark {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: 60vh;
-    color: var(--rule);
-    line-height: 1;
-    user-select: none;
-    pointer-events: none;
-  }
-  .s7-content {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.4rem;
-  }
-  .s7-content .h-display {
-    font-size: clamp(4rem, 8vw, 7.5rem);
-  }
-  .s7-content .label { letter-spacing: 0.32em; }
+      /* ---------- Slide 7: build (stub — mirrors s2) ---------- */
+      .s7 {
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .s7-watermark {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 60vh;
+        color: var(--rule);
+        line-height: 1;
+        user-select: none;
+        pointer-events: none;
+      }
+      .s7-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.4rem;
+      }
+      .s7-content .h-display {
+        font-size: clamp(4rem, 8vw, 7.5rem);
+      }
+      .s7-content .label {
+        letter-spacing: 0.32em;
+      }
 
-  /* ---------- Overview ---------- */
-  .overview {
-    position: fixed;
-    inset: 0;
-    background: rgba(253, 252, 249, 0.97);
-    z-index: 100;
-    display: none;
-    padding: 4vh 5vw;
-    overflow: auto;
-  }
-  .overview.active { display: block; }
-  .overview-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 2.4vh;
-  }
-  .overview-head .label { font-size: 0.78rem; }
-  .overview-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2.2vw;
-  }
-  .overview-tile {
-    cursor: pointer;
-    border: 1px solid var(--rule);
-    background: var(--paper);
-    aspect-ratio: 16 / 9;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 180ms;
-  }
-  .overview-tile:hover { border-color: var(--ink); }
-  .overview-tile.current { border-color: var(--rust); }
-  .overview-tile .thumb {
-    position: absolute;
-    inset: 0;
-    transform: scale(0.235);
-    transform-origin: top left;
-    width: 426%;
-    height: 426%;
-    pointer-events: none;
-  }
-  .overview-tile .num {
-    position: absolute;
-    bottom: 6%;
-    right: 6%;
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.16em;
-    color: var(--muted);
-    background: var(--paper);
-    padding: 0.15rem 0.4rem;
-    z-index: 2;
-  }
+      /* ---------- Overview ---------- */
+      .overview {
+        position: fixed;
+        inset: 0;
+        background: rgba(253, 252, 249, 0.97);
+        z-index: 100;
+        display: none;
+        padding: 4vh 5vw;
+        overflow: auto;
+      }
+      .overview.active {
+        display: block;
+      }
+      .overview-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 2.4vh;
+      }
+      .overview-head .label {
+        font-size: 0.78rem;
+      }
+      .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2.2vw;
+      }
+      .overview-tile {
+        cursor: pointer;
+        border: 1px solid var(--rule);
+        background: var(--paper);
+        aspect-ratio: 16 / 9;
+        position: relative;
+        overflow: hidden;
+        transition: border-color 180ms;
+      }
+      .overview-tile:hover {
+        border-color: var(--ink);
+      }
+      .overview-tile.current {
+        border-color: var(--rust);
+      }
+      .overview-tile .thumb {
+        position: absolute;
+        inset: 0;
+        transform: scale(0.235);
+        transform-origin: top left;
+        width: 426%;
+        height: 426%;
+        pointer-events: none;
+      }
+      .overview-tile .num {
+        position: absolute;
+        bottom: 6%;
+        right: 6%;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.16em;
+        color: var(--muted);
+        background: var(--paper);
+        padding: 0.15rem 0.4rem;
+        z-index: 2;
+      }
 
-  /* ---------- Help / hint ---------- */
-  .hint {
-    position: fixed;
-    bottom: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: var(--mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--muted-2);
-    opacity: 0;
-    transition: opacity 220ms;
-    pointer-events: none;
-    z-index: 50;
-  }
-  .hint.show { opacity: 1; }
+      /* ---------- Help / hint ---------- */
+      .hint {
+        position: fixed;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted-2);
+        opacity: 0;
+        transition: opacity 220ms;
+        pointer-events: none;
+        z-index: 50;
+      }
+      .hint.show {
+        opacity: 1;
+      }
 
-  /* ---------- Active slide content fade-in ---------- */
-  .slide.active .h-display,
-  .slide.active .h-large,
-  .slide.active .h-medium,
-  .slide.active .body-lg,
-  .slide.active .body,
-  .slide.active .label,
-  .slide.active .s5-tiles,
-  .slide.active .s6-grid,
-  .slide.active .s-arch-stack,
-  .slide.active .s-loop-diagram,
-  .slide.active .s4-headline,
-  .slide.active .s4-dek,
-  .slide.active .s4-cols,
-  .slide.active .s4-bottom {
-    animation: rise 520ms cubic-bezier(.2,.7,.2,1) both;
-  }
-  .slide.active .h-display          { animation-delay: 60ms; }
-  .slide.active .body-lg            { animation-delay: 180ms; }
-  .slide.active .body               { animation-delay: 200ms; }
-  .slide.active .s4-headline        { animation-delay: 100ms; }
-  .slide.active .s4-dek             { animation-delay: 160ms; }
-  .slide.active .s4-cols            { animation-delay: 220ms; }
-  .slide.active .s4-bottom          { animation-delay: 320ms; }
-  .slide.active .s5-tiles           { animation-delay: 220ms; }
-  .slide.active .s6-grid            { animation-delay: 220ms; }
-  .slide.active .s-arch-stack       { animation-delay: 220ms; }
-  .slide.active .s-loop-diagram     { animation-delay: 220ms; }
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-</style>
-</head>
-<body>
-  <div class="stage">
-    <div class="deck" id="deck">
-
-      <!-- ============== SLIDE 1 ============== -->
-      <section class="slide s1 slide-no-chrome" data-slide="1">
-        <div class="s1-grid">
-          <div class="s1-art" aria-hidden="true">
-            <div class="caption">Claude Monet — Houses of Parliament, Sunset · 1903</div>
+      /* ---------- Active slide content fade-in ---------- */
+      .slide.active .h-display,
+      .slide.active .h-large,
+      .slide.active .h-medium,
+      .slide.active .body-lg,
+      .slide.active .body,
+      .slide.active .label,
+      .slide.active .s5-tiles,
+      .slide.active .s6-grid,
+      .slide.active .s-arch-stack,
+      .slide.active .s-loop-diagram,
+      .slide.active .s4-headline,
+      .slide.active .s4-dek,
+      .slide.active .s4-cols,
+      .slide.active .s4-bottom {
+        animation: rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      }
+      .slide.active .h-display {
+        animation-delay: 60ms;
+      }
+      .slide.active .body-lg {
+        animation-delay: 180ms;
+      }
+      .slide.active .body {
+        animation-delay: 200ms;
+      }
+      .slide.active .s4-headline {
+        animation-delay: 100ms;
+      }
+      .slide.active .s4-dek {
+        animation-delay: 160ms;
+      }
+      .slide.active .s4-cols {
+        animation-delay: 220ms;
+      }
+      .slide.active .s4-bottom {
+        animation-delay: 320ms;
+      }
+      .slide.active .s5-tiles {
+        animation-delay: 220ms;
+      }
+      .slide.active .s6-grid {
+        animation-delay: 220ms;
+      }
+      .slide.active .s-arch-stack {
+        animation-delay: 220ms;
+      }
+      .slide.active .s-loop-diagram {
+        animation-delay: 220ms;
+      }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="deck" id="deck">
+        <!-- ============== SLIDE 1 ============== -->
+        <section class="slide s1 slide-no-chrome" data-slide="1">
+          <div class="s1-grid">
+            <div class="s1-art" aria-hidden="true">
+              <div class="caption">
+                Claude Monet — Houses of Parliament, Sunset · 1903
+              </div>
+            </div>
+            <div class="s1-content">
+              <div class="s1-hero-mark"><span class="lam">λ</span>Eigen</div>
+              <div class="s1-headline">
+                <h1 class="h-display">
+                  <span class="accent">Continuous</span> A/B testing for email
+                  marketing.
+                </h1>
+                <p class="body-lg">
+                  An allocator picks. An agent writes. Every send teaches both.
+                </p>
+              </div>
+              <div class="s1-footer">
+                <span>Eigen · Founding Round</span>
+                <span>Est. 2026</span>
+              </div>
+            </div>
           </div>
-          <div class="s1-content">
-            <div class="s1-hero-mark"><span class="lam">λ</span>Eigen</div>
-            <div class="s1-headline">
-              <h1 class="h-display">The <span class="accent">autonomous</span> email <span class="accent">optimization</span> platform</h1>
-              <p class="body-lg">
-                Dynamic A/B testing meets LLM-driven auto-research.
+        </section>
+
+        <!-- ============== SLIDE 2 — The Problem ============== -->
+        <section class="slide s-problem" data-slide="2">
+          <div class="wordmark"><span class="lam">λ</span>Eigen</div>
+          <div class="label">The Problem</div>
+          <h2 class="h-large s-problem-headline">
+            The highest-ROI channel in marketing is the worst-optimized.
+          </h2>
+          <p class="body-lg s-problem-dek">
+            Most teams optimize it once, by hand, then move on.
+          </p>
+
+          <div class="s-problem-cols">
+            <div class="s-problem-col">
+              <div class="s-problem-tag">Manual</div>
+              <h3 class="s-problem-h">Written by committee.</h3>
+              <p class="s-problem-body">
+                Subject lines picked in Slack. Copy approved by whoever shouts
+                last.
               </p>
             </div>
-            <div class="s1-footer">
-              <span>Eigen · Founding Round</span>
-              <span>Est. 2026</span>
+            <div class="s-problem-vrule"></div>
+            <div class="s-problem-col">
+              <div class="s-problem-tag">Slow</div>
+              <h3 class="s-problem-h">Tests that don't end.</h3>
+              <p class="s-problem-body">
+                50/50 splits take weeks. Most never reach significance. Teams
+                ship coin flips.
+              </p>
+            </div>
+            <div class="s-problem-vrule"></div>
+            <div class="s-problem-col">
+              <div class="s-problem-tag">Forgotten</div>
+              <h3 class="s-problem-h">No memory between sends.</h3>
+              <p class="s-problem-body">
+                Last week's winner doesn't carry forward. Every campaign starts
+                from zero.
+              </p>
             </div>
           </div>
-        </div>
-      </section>
 
-      <!-- ============== SLIDE 2 — The Problem ============== -->
-      <section class="slide s-problem" data-slide="2">
-        <div class="wordmark"><span class="lam">λ</span>Eigen</div>
-        <div class="label">The Problem</div>
-        <h2 class="h-large s-problem-headline" style="margin: 1.2rem 0 0 0;">
-          Manual email marketing leaves <em>conversion</em> on the table.
-        </h2>
-        <p class="body-lg s-problem-dek">
-          The highest-ROI channel in marketing — and most teams optimize
-          it once, by hand, then move on.
-        </p>
-
-        <div class="s-problem-cols">
-          <div class="s-problem-col">
-            <div class="s-problem-tag">01 · Manual</div>
-            <h3 class="s-problem-h">Written by committee.</h3>
-            <p class="s-problem-body">
-              Subject lines are picked in a Slack thread. Copy is approved
-              by whoever shouts last. Optimization is whatever survives
-              the meeting.
-            </p>
+          <div
+            class="italic-serif"
+            style="text-align: center; margin-top: 2.4rem"
+          >
+            100k sends/month, 2% conversion, $50 AOV. Every 1% lift =
+            <em>$12K/year</em>.
           </div>
-          <div class="s-problem-vrule"></div>
-          <div class="s-problem-col">
-            <div class="s-problem-tag">02 · Slow</div>
-            <h3 class="s-problem-h">Tests that don't end.</h3>
-            <p class="s-problem-body">
-              Static 50/50 splits take weeks to call. Most campaigns never
-              reach significance — and ship a "winner" that's a coin flip
-              in disguise.
-            </p>
-          </div>
-          <div class="s-problem-vrule"></div>
-          <div class="s-problem-col">
-            <div class="s-problem-tag">03 · Forgotten</div>
-            <h3 class="s-problem-h">No memory between sends.</h3>
-            <p class="s-problem-body">
-              What worked last week rarely informs the next campaign.
-              Every send starts the learning loop over from zero.
-            </p>
-          </div>
-        </div>
 
-        <div class="meta-left">Eigen · Founding Round</div>
-        <div class="meta-right">02 / 09</div>
-      </section>
+          <div class="meta-left">Eigen · Founding Round</div>
+          <div class="meta-right">02 / 10</div>
+        </section>
 
-      <!-- ============== SLIDE 3 — What Eigen is ============== -->
-      <section class="slide s-what" data-slide="3">
-        <div class="wordmark"><span class="lam">λ</span>Eigen</div>
-        <div class="label">What Eigen Is</div>
-        <h2 class="h-large s-what-headline" style="margin: 1.2rem 0 0 0;">
-          A <em>self-improving</em> email engine.
-        </h2>
-        <p class="body-lg s-what-dek">
-          Two systems working in tandem — an algorithm that learns what wins,
-          and an agent that decides what to try next.
-        </p>
+        <!-- ============== SLIDE 3 — What Eigen is ============== -->
+        <section class="slide s-what" data-slide="3">
+          <div class="wordmark"><span class="lam">λ</span>Eigen</div>
+          <div class="label">What Eigen Is</div>
+          <h2 class="h-large s-what-headline">
+            Eigen runs your A/B tests forever.
+          </h2>
+          <p class="body-lg s-what-dek">
+            An allocator splits traffic. An agent writes new variants.
+          </p>
 
-        <div class="s-what-cols">
-          <div class="s-what-col">
-            <div class="s-what-tag">01 · The Algorithm</div>
-            <h3 class="s-what-h">Dynamic <em>A/B testing</em>.</h3>
-            <p class="body">
-              Adaptive allocation, not 50/50 splits. Variants compete in real
-              time — winners get more traffic, losers get pruned, and
-              confidence builds with every send.
-            </p>
-            <div class="s-what-viz">
-              <div class="viz-cap">Bandit · Live Allocation</div>
-              <div class="viz-bars" aria-hidden="true">
-                <div class="row">
-                  <span>A</span>
-                  <span class="bar"><span class="fill fill-a"></span></span>
-                </div>
-                <div class="row">
-                  <span>B</span>
-                  <span class="bar"><span class="fill fill-b"></span></span>
-                </div>
-                <div class="row">
-                  <span>C</span>
-                  <span class="bar"><span class="fill fill-c"></span></span>
+          <div class="s-what-cols">
+            <div class="s-what-col">
+              <div class="s-what-tag">The Algorithm</div>
+              <h3 class="s-what-h">Dynamic A/B testing.</h3>
+              <p class="body">
+                Variants compete on every send. Winners get more traffic. Losers
+                stop sending.
+              </p>
+              <div class="s-what-viz">
+                <div class="viz-cap">Bayesian · Live Allocation</div>
+                <div class="viz-bars" aria-hidden="true">
+                  <div class="row">
+                    <span>A</span>
+                    <span class="bar"><span class="fill fill-a"></span></span>
+                  </div>
+                  <div class="row">
+                    <span>B</span>
+                    <span class="bar"><span class="fill fill-b"></span></span>
+                  </div>
+                  <div class="row">
+                    <span>C</span>
+                    <span class="bar"><span class="fill fill-c"></span></span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="s-what-divider"></div>
-          <div class="s-what-col">
-            <div class="s-what-tag">02 · The Agent</div>
-            <h3 class="s-what-h">LLM <em>auto-research</em>.</h3>
-            <p class="body">
-              New subject lines, new copy, new angles — generated, scored,
-              and queued automatically. The system writes its own next
-              experiment based on what just won.
-            </p>
-            <div class="s-what-viz">
-              <div class="viz-cap">Generator · 3 New Variants</div>
-              <div class="viz-templates" aria-hidden="true">
-                <div class="tmpl tmpl-1">
-                  <div class="subj"></div>
-                  <div class="line l1"></div>
-                  <div class="line l2"></div>
-                  <div class="line l3"></div>
-                  <div class="cta"></div>
-                </div>
-                <div class="tmpl tmpl-2">
-                  <div class="subj"></div>
-                  <div class="line l1"></div>
-                  <div class="line l2"></div>
-                  <div class="line l3"></div>
-                  <div class="cta"></div>
-                </div>
-                <div class="tmpl tmpl-3">
-                  <div class="subj"></div>
-                  <div class="line l1"></div>
-                  <div class="line l2"></div>
-                  <div class="line l3"></div>
-                  <div class="cta"></div>
+            <div class="s-what-divider"></div>
+            <div class="s-what-col">
+              <div class="s-what-tag">The Agent</div>
+              <h3 class="s-what-h">An agent writes variants.</h3>
+              <p class="body">
+                When a variant wins, an agent writes the next batch from it.
+                Subject lines, copy, and CTAs.
+              </p>
+              <div class="s-what-viz">
+                <div class="viz-cap">Generator · 3 New Variants</div>
+                <div class="viz-templates" aria-hidden="true">
+                  <div class="tmpl tmpl-1">
+                    <div class="subj"></div>
+                    <div class="line l1"></div>
+                    <div class="line l2"></div>
+                    <div class="line l3"></div>
+                    <div class="cta"></div>
+                  </div>
+                  <div class="tmpl tmpl-2">
+                    <div class="subj"></div>
+                    <div class="line l1"></div>
+                    <div class="line l2"></div>
+                    <div class="line l3"></div>
+                    <div class="cta"></div>
+                  </div>
+                  <div class="tmpl tmpl-3">
+                    <div class="subj"></div>
+                    <div class="line l1"></div>
+                    <div class="line l2"></div>
+                    <div class="line l3"></div>
+                    <div class="cta"></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="meta-left">Eigen · Founding Round</div>
-        <div class="meta-right">03 / 09</div>
-      </section>
+          <div class="meta-left">Eigen · Founding Round</div>
+          <div class="meta-right">03 / 10</div>
+        </section>
 
-      <!-- ============== SLIDE 3 — Demo ============== -->
-      <section class="slide s2" data-slide="3">
-        <div class="wordmark"><span class="lam">λ</span>Eigen</div>
-        <div class="s2-watermark" aria-hidden="true">λ</div>
-        <div class="s2-content">
-          <div class="label">Live Demonstration</div>
-          <h2 class="h-display">Demo.</h2>
-          <div class="label" style="color: var(--ink);">[ &nbsp;LIVE — eigentest.com/demo&nbsp; ]</div>
-        </div>
-        <div class="meta-left">Eigen · Founding Round</div>
-        <div class="meta-right">04 / 09</div>
-      </section>
+        <!-- ============== SLIDE 4 — Why Now ============== -->
+        <section class="slide s-why" data-slide="4">
+          <div class="wordmark"><span class="lam">λ</span>Eigen</div>
+          <div class="label">Why Now</div>
+          <h2 class="h-large s-problem-headline">
+            Three things got cheap in 24 months.
+          </h2>
 
-      <!-- ============== SLIDE 4 — Founders ============== -->
-      <section class="slide s3" data-slide="4">
-        <div class="wordmark"><span class="lam">λ</span>Eigen</div>
-        <div class="label">Founders</div>
-        <h2 class="h-large" style="margin: 1.2rem 0 0 0; white-space: nowrap;">
-          The Team
-        </h2>
-
-        <div class="s3-body">
-          <div class="s3-col">
-            <div class="s3-portrait">
-              <img src="assets/profile-pics/andrew-hall.jpeg" alt="Andrew Hall" />
+          <div class="s-problem-cols">
+            <div class="s-problem-col">
+              <div class="s-problem-tag">Generation</div>
+              <h3 class="s-problem-h">LLMs write the copy.</h3>
+              <p class="s-problem-body">
+                The math wasn't the bottleneck. Writing twenty subject lines
+                was. An agent writes a hundred in seconds.
+              </p>
             </div>
-            <h3 class="s3-name">Andrew Hall</h3>
-            <div class="s3-role">Co-founder · Quant + ML</div>
-            <ul class="s3-bullets">
-              <li>Studied Computer Science with an emphasis in machine learning</li>
-              <li>Background in Bayesian methods</li>
-              <li>Built out systematic trading system for the Silver Fund</li>
-              <li>Incoming derivatives trader at Barclays</li>
-            </ul>
-            <div class="s3-logos">
-              <div class="s3-logos-row">
-                <img src="assets/logos/byu-logo.png" alt="BYU" />
-                <img src="assets/logos/silver-fund-logo.jpeg" alt="Silver Fund" />
-                <img src="assets/logos/barclays-logo.png" alt="Barclays" />
+            <div class="s-problem-vrule"></div>
+            <div class="s-problem-col">
+              <div class="s-problem-tag">Delivery</div>
+              <h3 class="s-problem-h">Per-send routing is one API call.</h3>
+              <p class="s-problem-body">
+                Resend and Postmark let us route per email, not per campaign.
+              </p>
+            </div>
+            <div class="s-problem-vrule"></div>
+            <div class="s-problem-col">
+              <div class="s-problem-tag">Proof</div>
+              <h3 class="s-problem-h">AI subject lines win.</h3>
+              <p class="s-problem-body">
+                +26% on AI subject lines. +41% revenue, AI vs. manual. The data
+                is in. No one's shipped the system.
+              </p>
+            </div>
+          </div>
+
+          <div class="meta-left">Eigen · Founding Round</div>
+          <div class="meta-right">04 / 10</div>
+        </section>
+
+        <!-- ============== SLIDE 5 — Demo ============== -->
+        <section class="slide s2" data-slide="5">
+          <div class="wordmark"><span class="lam">λ</span>Eigen</div>
+          <div class="s2-watermark" aria-hidden="true">λ</div>
+          <div class="s2-content">
+            <div class="label">Live Demonstration</div>
+            <h2 class="h-display">Demo.</h2>
+            <div class="label" style="color: var(--ink)">
+              [ &nbsp;LIVE · eigentest.com/demo&nbsp; ]
+            </div>
+          </div>
+          <div class="meta-left">Eigen · Founding Round</div>
+          <div class="meta-right">05 / 10</div>
+        </section>
+
+        <!-- ============== SLIDE 6 — Founders ============== -->
+        <section class="slide s3" data-slide="6">
+          <div class="wordmark"><span class="lam">λ</span>Eigen</div>
+          <div class="label">Founders</div>
+          <h2 class="h-large" style="white-space: nowrap">The Team</h2>
+
+          <div class="s3-body">
+            <div class="s3-col">
+              <div class="s3-portrait">
+                <img
+                  src="assets/profile-pics/andrew-hall.jpeg"
+                  alt="Andrew Hall"
+                />
+              </div>
+              <h3 class="s3-name">Andrew Hall</h3>
+              <div class="s3-role">Co-founder · Quant + ML</div>
+              <ul class="s3-bullets">
+                <li>Computer Science, machine learning emphasis</li>
+                <li>Bayesian methods</li>
+                <li>Built the Silver Fund's systematic trading system</li>
+                <li>Incoming derivatives trader, Barclays</li>
+              </ul>
+              <div class="s3-logos">
+                <div class="s3-logos-row">
+                  <img src="assets/logos/byu-logo.png" alt="BYU" />
+                  <img
+                    src="assets/logos/silver-fund-logo.jpeg"
+                    alt="Silver Fund"
+                  />
+                  <img src="assets/logos/barclays-logo.png" alt="Barclays" />
+                </div>
+              </div>
+            </div>
+            <div class="s3-divider"></div>
+            <div class="s3-col">
+              <div class="s3-portrait">
+                <img
+                  src="assets/profile-pics/justin-hill.jpeg"
+                  alt="Justin Hill"
+                />
+              </div>
+              <h3 class="s3-name">Justin Hill</h3>
+              <div class="s3-role">Co-founder · Product + Eng</div>
+              <ul class="s3-bullets">
+                <li>
+                  Senior software engineer, Figma growth and monetization team
+                </li>
+                <li>Senior research fellow, Contrary Research</li>
+                <li>First cohort, Sandbox</li>
+                <li>Incoming MS/MBA, Harvard</li>
+              </ul>
+              <div class="s3-logos">
+                <div class="s3-logos-row">
+                  <img src="assets/logos/figma-logo.png" alt="Figma" />
+                  <img
+                    src="assets/logos/contrary-research-logo.jpeg"
+                    alt="Contrary Research"
+                  />
+                  <img src="assets/logos/sandbox-logo.webp" alt="Sandbox" />
+                  <img src="assets/logos/harvard-logo.png" alt="Harvard" />
+                </div>
               </div>
             </div>
           </div>
-          <div class="s3-divider"></div>
-          <div class="s3-col">
-            <div class="s3-portrait">
-              <img src="assets/profile-pics/justin-hill.jpeg" alt="Justin Hill" />
+
+          <div class="meta-left">Eigen · Founding Round</div>
+          <div class="meta-right">06 / 10</div>
+        </section>
+
+        <!-- ============== SLIDE 7 — Market ============== -->
+        <section class="slide s4" data-slide="7">
+          <div class="wordmark"><span class="lam">λ</span>Eigen</div>
+          <div class="label">Market</div>
+
+          <h2 class="s4-headline">Email is the start.</h2>
+          <p class="s4-dek">$17.9B market. Best ROI in digital marketing.</p>
+
+          <div class="s4-cols">
+            <!-- Column 1 — The Market -->
+            <div class="s4-col">
+              <div class="s4-col-tag">The Market</div>
+              <div class="s4-bignum">$17.9<span class="unit">B</span></div>
+              <div class="s4-col-cap">
+                Global Email Marketing Revenue · 2026
+              </div>
+              <div class="s4-col-sub">→ $24.2B by 2029</div>
+              <div class="s4-col-cap-sm">10.5% CAGR</div>
+              <div class="s4-col-foot">4.48B email users worldwide</div>
             </div>
-            <h3 class="s3-name">Justin Hill</h3>
-            <div class="s3-role">Co-founder · Product + Eng</div>
-            <ul class="s3-bullets">
-              <li>Senior software engineer at Figma</li>
-              <li>Previous senior research fellow at Contrary Research</li>
-              <li>First cohort of Sandbox</li>
-              <li>Incoming dual MS/MBA at Harvard University</li>
-            </ul>
-            <div class="s3-logos">
-              <div class="s3-logos-row">
-                <img src="assets/logos/figma-logo.png" alt="Figma" />
-                <img src="assets/logos/contrary-research-logo.jpeg" alt="Contrary Research" />
-                <img src="assets/logos/sandbox-logo.webp" alt="Sandbox" />
-                <img src="assets/logos/harvard-logo.png" alt="Harvard" />
+
+            <div class="s4-vrule"></div>
+
+            <!-- Column 2 — The ROI -->
+            <div class="s4-col">
+              <div class="s4-col-tag">The ROI</div>
+              <div class="s4-bignum">$36–42</div>
+              <div class="s4-col-cap">Return Per $1 Spent on Email</div>
+              <div class="s4-bars">
+                <div class="bar-row row-accent" style="display: contents">
+                  <span class="bar-lab">Email</span>
+                  <div class="bar">
+                    <div class="fill" style="width: 100%"></div>
+                  </div>
+                  <span class="bar-val">$36–42</span>
+                </div>
+                <div class="bar-row" style="display: contents">
+                  <span class="bar-lab">Paid Search</span>
+                  <div class="bar">
+                    <div class="fill" style="width: 4.8%"></div>
+                  </div>
+                  <span class="bar-val">$2.00</span>
+                </div>
+                <div class="bar-row" style="display: contents">
+                  <span class="bar-lab">Social Ads</span>
+                  <div class="bar">
+                    <div class="fill" style="width: 6.7%"></div>
+                  </div>
+                  <span class="bar-val">$2.80</span>
+                </div>
+                <div class="bar-row" style="display: contents">
+                  <span class="bar-lab">Display</span>
+                  <div class="bar">
+                    <div class="fill" style="width: 3.2%"></div>
+                  </div>
+                  <span class="bar-val">$1.35</span>
+                </div>
+              </div>
+              <div class="s4-col-cap-sm">
+                Best ROI in Digital · 13× Paid Search
+              </div>
+              <div class="s4-col-foot">
+                Across all digital marketing channels
+              </div>
+            </div>
+
+            <div class="s4-vrule"></div>
+
+            <!-- Column 3 — The Lift (hero) -->
+            <div class="s4-col">
+              <div class="s4-col-tag">The Lift</div>
+              <div class="s4-bignum accent">+41%</div>
+              <div class="s4-col-cap">
+                Revenue Lift · AI-Powered vs Manual Email
+              </div>
+              <div class="s4-stats">
+                <div class="s4-stat">
+                  <span class="num">+26%</span>
+                  <span class="lab">AI-Generated Subject Lines vs Human</span>
+                </div>
+                <div class="s4-stat">
+                  <span class="num">+760%</span>
+                  <span class="lab">Segmented vs Broadcast Campaigns</span>
+                </div>
+                <div class="s4-stat">
+                  <span class="num">61%</span>
+                  <span class="lab"
+                    >Enterprise Programs Using AI by Late 2026</span
+                  >
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="meta-left">Eigen · Founding Round</div>
-        <div class="meta-right">05 / 09</div>
-      </section>
-
-      <!-- ============== SLIDE 5 — Market ============== -->
-      <section class="slide s4" data-slide="5">
-        <div class="wordmark"><span class="lam">λ</span>Eigen</div>
-        <div class="label">Market</div>
-
-        <h2 class="s4-headline">
-          Email is the start.
-        </h2>
-        <p class="s4-dek">
-          A $17.9B market with the best ROI in digital marketing — and AI is
-          already proving the lift.
-        </p>
-
-        <div class="s4-cols">
-          <!-- Column 1 — The Market -->
-          <div class="s4-col">
-            <div class="s4-col-tag">01 · The Market</div>
-            <div class="s4-bignum">$17.9<span class="unit">B</span></div>
-            <div class="s4-col-cap">Global Email Marketing Revenue · 2026</div>
-            <div class="s4-col-sub">→ $24.2B by 2029</div>
-            <div class="s4-col-cap-sm">10.5% CAGR</div>
-            <div class="s4-col-foot">4.48B email users worldwide</div>
-          </div>
-
-          <div class="s4-vrule"></div>
-
-          <!-- Column 2 — The ROI -->
-          <div class="s4-col">
-            <div class="s4-col-tag">02 · The ROI</div>
-            <div class="s4-bignum">$36–42</div>
-            <div class="s4-col-cap">Return Per $1 Spent on Email</div>
-            <div class="s4-bars">
-              <div class="bar-row row-accent" style="display:contents;">
-                <span class="bar-lab">Email</span>
-                <div class="bar"><div class="fill" style="width:100%"></div></div>
-                <span class="bar-val">$36–42</span>
+          <div class="s4-bottom">
+            <div class="s4-bottom-grid">
+              <div class="italic-serif">
+                Email first. Conversion metrics, fast revenue, $6.8B AI email
+                market by 2028.
               </div>
-              <div class="bar-row" style="display:contents;">
-                <span class="bar-lab">Paid Search</span>
-                <div class="bar"><div class="fill" style="width:4.8%"></div></div>
-                <span class="bar-val">$2.00</span>
-              </div>
-              <div class="bar-row" style="display:contents;">
-                <span class="bar-lab">Social Ads</span>
-                <div class="bar"><div class="fill" style="width:6.7%"></div></div>
-                <span class="bar-val">$2.80</span>
-              </div>
-              <div class="bar-row" style="display:contents;">
-                <span class="bar-lab">Display</span>
-                <div class="bar"><div class="fill" style="width:3.2%"></div></div>
-                <span class="bar-val">$1.35</span>
+              <div class="italic-serif">
+                Then anywhere optimization is measurable. Landing pages, ad
+                creative, pricing, onboarding.
               </div>
             </div>
-            <div class="s4-col-cap-sm">Best ROI in Digital · 13× Paid Search</div>
-            <div class="s4-col-foot">Across all digital marketing channels</div>
+            <div class="s4-flow">
+              Email<span class="chev">→</span>Landing Pages<span class="chev"
+                >→</span
+              >Creative<span class="chev">→</span>Pricing<span class="chev"
+                >→</span
+              >Onboarding
+            </div>
+            <div class="s4-sources">
+              Sources · Litmus, Mailchimp, Salesforce, HubSpot via
+              DigitalApplied 2026
+            </div>
           </div>
 
-          <div class="s4-vrule"></div>
+          <div class="meta-left">Eigen · Founding Round</div>
+          <div class="meta-right">07 / 10</div>
+        </section>
 
-          <!-- Column 3 — The Lift (hero) -->
-          <div class="s4-col">
-            <div class="s4-col-tag">03 · The Lift</div>
-            <div class="s4-bignum accent">+41%</div>
-            <div class="s4-col-cap">Revenue Lift · AI-Powered vs Manual Email</div>
-            <div class="s4-stats">
-              <div class="s4-stat">
-                <span class="num">+26%</span>
-                <span class="lab">AI-Generated Subject Lines vs Human</span>
+        <!-- ============== SLIDE 8 — Validation ============== -->
+        <section class="slide s5" data-slide="8">
+          <div class="wordmark"><span class="lam">λ</span>Eigen</div>
+          <div class="label">Validation</div>
+          <h2 class="h-large s5-headline">Validation</h2>
+
+          <div class="s5-precommit">
+            <span class="italic-serif"
+              >$400 closed in pre-commits in the past 24 hours.</span
+            >
+            <div class="s5-precommit-sub label">From people who work at</div>
+          </div>
+
+          <div class="s5-tiles">
+            <div class="s5-tile">
+              <div class="s5-logo">
+                <img
+                  class="logo-salesforce"
+                  src="assets/logos/salesforce-logo.png"
+                  alt="Salesforce"
+                />
               </div>
-              <div class="s4-stat">
-                <span class="num">+760%</span>
-                <span class="lab">Segmented vs Broadcast Campaigns</span>
+              <div class="tag">Pre-commit</div>
+            </div>
+            <div class="s5-vrule"></div>
+            <div class="s5-tile">
+              <div class="s5-logo">
+                <img
+                  class="logo-replay"
+                  src="assets/logos/replay-logo.jpeg"
+                  alt="Replay"
+                />
               </div>
-              <div class="s4-stat">
-                <span class="num">61%</span>
-                <span class="lab">Enterprise Programs Using AI by Late 2026</span>
+              <div class="tag">Pre-commit</div>
+            </div>
+            <div class="s5-vrule"></div>
+            <div class="s5-tile">
+              <div class="s5-logo">
+                <img
+                  class="logo-leland"
+                  src="assets/logos/leland-logo.png"
+                  alt="Leland"
+                />
+              </div>
+              <div class="tag">Pre-commit</div>
+            </div>
+            <div class="s5-vrule"></div>
+            <div class="s5-tile">
+              <div class="s5-logo">
+                <img
+                  class="logo-stash"
+                  src="assets/logos/stash-logo.png"
+                  alt="Stash"
+                />
+              </div>
+              <div class="tag">Pre-commit</div>
+            </div>
+          </div>
+
+          <div class="s5-foot">
+            <div class="label" style="letter-spacing: 0.22em">$100 / Seat</div>
+          </div>
+
+          <div class="meta-left">Eigen · Founding Round</div>
+          <div class="meta-right">08 / 10</div>
+        </section>
+
+        <!-- ============== SLIDE 9 — The Loop ============== -->
+        <section class="slide s-loop" data-slide="9">
+          <div class="wordmark"><span class="lam">λ</span>Eigen</div>
+          <div class="label">Build · The Loop</div>
+          <h2 class="h-large s-loop-headline">Two loops. One engine.</h2>
+          <p class="body-lg s-loop-dek">
+            Inner loop sharpens what's winning. Outer loop creates what's next.
+          </p>
+
+          <div class="s-loop-diagram">
+            <div class="s-loop-row">
+              <div class="s-loop-node">
+                <div class="n">Baseline<br />Email</div>
+              </div>
+              <div class="s-loop-arrow">→</div>
+              <div class="s-loop-node accent">
+                <div class="n">Variant<br />Generator</div>
+              </div>
+              <div class="s-loop-arrow">→</div>
+              <div class="s-loop-node accent">
+                <div class="n">Bayesian<br />Allocator</div>
+              </div>
+              <div class="s-loop-arrow">→</div>
+              <div class="s-loop-node">
+                <div class="n">Audience</div>
+              </div>
+              <div class="s-loop-arrow">→</div>
+              <div class="s-loop-node">
+                <div class="n">Posteriors</div>
+              </div>
+            </div>
+
+            <svg
+              class="s-loop-arcs"
+              viewBox="0 0 1000 200"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <defs>
+                <marker
+                  id="arr-rust"
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="7"
+                  markerHeight="7"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#b25a3c" />
+                </marker>
+                <marker
+                  id="arr-slate"
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="7"
+                  markerHeight="7"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#5e7488" />
+                </marker>
+              </defs>
+              <!-- allocation loop: posteriors (x≈900) back to allocator (x≈500) -->
+              <path
+                d="M 900 6 C 900 100, 500 100, 500 6"
+                fill="none"
+                stroke="#b25a3c"
+                stroke-width="1.6"
+                marker-end="url(#arr-rust)"
+                vector-effect="non-scaling-stroke"
+              />
+              <!-- generation loop: posteriors (x≈900) back to variant generator (x≈300) -->
+              <path
+                d="M 900 6 C 900 190, 300 190, 300 6"
+                fill="none"
+                stroke="#5e7488"
+                stroke-width="1.6"
+                stroke-dasharray="5 4"
+                marker-end="url(#arr-slate)"
+                vector-effect="non-scaling-stroke"
+              />
+            </svg>
+
+            <div class="s-loop-legends">
+              <div class="s-loop-legend">
+                <span class="swatch"></span>
+                <span>Allocation Loop · re-weight to winners</span>
+              </div>
+              <div class="s-loop-legend">
+                <span class="swatch slate"></span>
+                <span>Generation Loop · propose new variants</span>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="s4-bottom">
-          <div class="s4-bottom-grid">
-            <div class="italic-serif">
-              Email first — clear conversion metrics, immediate revenue,
-              $6.8B AI email tools market by 2028.
-            </div>
-            <div class="italic-serif">
-              Then anywhere optimization is measurable — landing pages,
-              ad creative, pricing, onboarding.
-            </div>
-          </div>
-          <div class="s4-flow">
-            Email<span class="chev">→</span>Landing Pages<span class="chev">→</span>Creative<span class="chev">→</span>Pricing<span class="chev">→</span>Onboarding
-          </div>
-          <div class="s4-sources">
-            Sources · Litmus, Mailchimp, Salesforce, HubSpot via DigitalApplied 2026
-          </div>
-        </div>
+          <div class="meta-left">Eigen · Founding Round</div>
+          <div class="meta-right">09 / 10</div>
+        </section>
 
-        <div class="meta-left">Eigen · Founding Round</div>
-        <div class="meta-right">06 / 09</div>
-      </section>
+        <!-- ============== SLIDE 10 — Architecture ============== -->
+        <section class="slide s-arch" data-slide="10">
+          <div class="wordmark"><span class="lam">λ</span>Eigen</div>
+          <div class="label">Build · Architecture</div>
+          <h2 class="h-large s-arch-headline">Technical Architecture</h2>
 
-      <!-- ============== SLIDE 6 — Validation ============== -->
-      <section class="slide s5" data-slide="6">
-        <div class="wordmark"><span class="lam">λ</span>Eigen</div>
-        <div class="label">Validation</div>
-        <h2 class="h-large s5-headline">Four founding partners. Committed.</h2>
-
-        <div class="s5-precommit">
-          <span class="italic-serif">$400 in pre-commits.</span>
-          <div class="s5-precommit-sub label">People who work at</div>
-        </div>
-
-        <div class="s5-tiles">
-          <div class="s5-tile">
-            <div class="s5-logo">
-              <img class="logo-salesforce" src="assets/logos/salesforce-logo.png" alt="Salesforce" />
+          <div class="s-arch-stack">
+            <div class="s-arch-cell">
+              <div class="s-arch-logo">
+                <img
+                  class="logo-nextjs"
+                  src="assets/logos/next-js-logo.svg"
+                  alt="Next.js"
+                />
+              </div>
+              <div class="s-arch-tag">Frontend</div>
+              <div class="s-arch-name">Next.js</div>
+              <div class="s-arch-role">
+                React app router, server components, edge rendering.
+              </div>
             </div>
-            <div class="tag">Founding Partner · 01</div>
-          </div>
-          <div class="s5-vrule"></div>
-          <div class="s5-tile">
-            <div class="s5-logo">
-              <img class="logo-replay" src="assets/logos/replay-logo.jpeg" alt="Replay" />
+            <div class="s-arch-cell">
+              <div class="s-arch-logo">
+                <img
+                  class="logo-clerk"
+                  src="assets/logos/clerk-logo.webp"
+                  alt="Clerk"
+                />
+              </div>
+              <div class="s-arch-tag">Auth</div>
+              <div class="s-arch-name">Clerk</div>
+              <div class="s-arch-role">Sessions, orgs, and access control.</div>
             </div>
-            <div class="tag">Founding Partner · 02</div>
-          </div>
-          <div class="s5-vrule"></div>
-          <div class="s5-tile">
-            <div class="s5-logo">
-              <img class="logo-leland" src="assets/logos/leland-logo.png" alt="Leland" />
+            <div class="s-arch-cell">
+              <div class="s-arch-logo">
+                <img
+                  class="logo-fastapi"
+                  src="assets/logos/fast-api-logo.png"
+                  alt="FastAPI"
+                />
+              </div>
+              <div class="s-arch-tag">Backend</div>
+              <div class="s-arch-name">FastAPI</div>
+              <div class="s-arch-role">
+                Async Python service for inference and orchestration.
+              </div>
             </div>
-            <div class="tag">Founding Partner · 03</div>
-          </div>
-          <div class="s5-vrule"></div>
-          <div class="s5-tile">
-            <div class="s5-logo">
-              <img class="logo-stash" src="assets/logos/stash-logo.png" alt="Stash" />
+            <div class="s-arch-cell">
+              <div class="s-arch-logo">
+                <img
+                  class="logo-postgres"
+                  src="assets/logos/postgres-logo.png"
+                  alt="Postgres"
+                />
+              </div>
+              <div class="s-arch-tag">Database</div>
+              <div class="s-arch-name">Postgres</div>
+              <div class="s-arch-role">
+                Campaigns, results, and posteriors. One store.
+              </div>
             </div>
-            <div class="tag">Founding Partner · 04</div>
-          </div>
-        </div>
-
-        <div class="s5-foot">
-          <div class="label" style="letter-spacing: 0.22em;">$100 / Seat</div>
-        </div>
-
-        <div class="meta-left">Eigen · Founding Round</div>
-        <div class="meta-right">07 / 09</div>
-      </section>
-
-      <!-- ============== SLIDE 7 — Quality (hidden) ============== -->
-      <section class="slide s6" data-slide="7" hidden>
-        <div class="wordmark"><span class="lam">λ</span>Eigen</div>
-        <div class="label">Quality</div>
-        <h2 class="h-large s6-headline" style="white-space: nowrap;">
-          AI is leverage when used with taste.
-        </h2>
-
-        <div class="s6-grid">
-          <div class="s6-tile editorial">
-            <div class="vis"></div>
-            <div class="cap">Editorial Restraint</div>
-          </div>
-          <div class="s6-tile math">
-            <div class="vis"></div>
-            <div class="cap">Mathematical Typography</div>
-          </div>
-          <div class="s6-tile monet">
-            <div class="vis"></div>
-            <div class="cap">Monet — Houses of Parliament, Fog</div>
-          </div>
-          <div class="s6-tile pairing">
-            <div class="vis"></div>
-            <div class="cap">Mono + Serif Pairing</div>
-          </div>
-          <div class="s6-tile restraint">
-            <div class="vis"></div>
-            <div class="cap">Whitespace as a Stance</div>
-          </div>
-          <div class="s6-tile gallery">
-            <div class="vis"></div>
-            <div class="cap">Gallery Catalogue, Not Pitch Deck</div>
-          </div>
-        </div>
-
-        <div class="meta-left">Eigen · Founding Round</div>
-        <div class="meta-right">07 / 09</div>
-      </section>
-
-      <!-- ============== SLIDE 8 — Architecture ============== -->
-      <section class="slide s-arch" data-slide="8">
-        <div class="wordmark"><span class="lam">λ</span>Eigen</div>
-        <div class="label">Build · Architecture</div>
-        <h2 class="h-large s-arch-headline" style="margin: 1.2rem 0 0 0;">
-          Technical Architecture
-        </h2>
-        <p class="body-lg s-arch-dek">
-          A modern stack wired for speed — every layer chosen so we ship,
-          not maintain.
-        </p>
-
-        <div class="s-arch-stack">
-          <div class="s-arch-cell">
-            <div class="s-arch-logo">
-              <img class="logo-nextjs" src="assets/logos/next-js-logo.svg" alt="Next.js" />
+            <div class="s-arch-cell">
+              <div class="s-arch-logo">
+                <img
+                  class="logo-anthropic"
+                  src="assets/logos/anthropic-logo.svg"
+                  alt="Anthropic"
+                />
+              </div>
+              <div class="s-arch-tag">AI</div>
+              <div class="s-arch-name">Anthropic</div>
+              <div class="s-arch-role">
+                Variant generation and audience research.
+              </div>
             </div>
-            <div class="s-arch-tag">01 · Frontend</div>
-            <div class="s-arch-name">Next.js</div>
-            <div class="s-arch-role">React app router, server components, edge rendering.</div>
-          </div>
-          <div class="s-arch-cell">
-            <div class="s-arch-logo">
-              <img class="logo-clerk" src="assets/logos/clerk-logo.webp" alt="Clerk" />
-            </div>
-            <div class="s-arch-tag">02 · Auth</div>
-            <div class="s-arch-name">Clerk</div>
-            <div class="s-arch-role">Sessions, organizations, and access control out of the box.</div>
-          </div>
-          <div class="s-arch-cell">
-            <div class="s-arch-logo">
-              <img class="logo-fastapi" src="assets/logos/fast-api-logo.png" alt="FastAPI" />
-            </div>
-            <div class="s-arch-tag">03 · Backend</div>
-            <div class="s-arch-name">FastAPI</div>
-            <div class="s-arch-role">Async Python service for inference and orchestration.</div>
-          </div>
-          <div class="s-arch-cell">
-            <div class="s-arch-logo">
-              <img class="logo-postgres" src="assets/logos/postgres-logo.png" alt="Postgres" />
-            </div>
-            <div class="s-arch-tag">04 · Database</div>
-            <div class="s-arch-name">Postgres</div>
-            <div class="s-arch-role">Campaigns, results, and posteriors persisted in one place.</div>
-          </div>
-          <div class="s-arch-cell">
-            <div class="s-arch-logo">
-              <img class="logo-anthropic" src="assets/logos/anthropic-logo.svg" alt="Anthropic" />
-            </div>
-            <div class="s-arch-tag">05 · AI</div>
-            <div class="s-arch-name">Anthropic</div>
-            <div class="s-arch-role">Claude for variant generation and audience research.</div>
-          </div>
-          <div class="s-arch-cell">
-            <div class="s-arch-logo">
-              <img class="logo-resend" src="assets/logos/resend-logo.svg" alt="Resend" />
-            </div>
-            <div class="s-arch-tag">06 · Delivery</div>
-            <div class="s-arch-name">Resend</div>
-            <div class="s-arch-role">Transactional and marketing send with event hooks.</div>
-          </div>
-        </div>
-
-        <div class="meta-left">Eigen · Founding Round</div>
-        <div class="meta-right">08 / 09</div>
-      </section>
-
-      <!-- ============== SLIDE 9 — The Loop ============== -->
-      <section class="slide s-loop" data-slide="9">
-        <div class="wordmark"><span class="lam">λ</span>Eigen</div>
-        <div class="label">Build · The Loop</div>
-        <h2 class="h-large s-loop-headline" style="margin: 1.2rem 0 0 0;">
-          Two loops. <em>One engine.</em>
-        </h2>
-        <p class="body-lg s-loop-dek">
-          An inner allocation loop sharpens what's working; an outer
-          generation loop creates what's next.
-        </p>
-
-        <div class="s-loop-diagram">
-          <div class="s-loop-row">
-            <div class="s-loop-node">
-              <div class="t">01</div>
-              <div class="n">Baseline<br/>Email</div>
-            </div>
-            <div class="s-loop-arrow">→</div>
-            <div class="s-loop-node accent">
-              <div class="t">02</div>
-              <div class="n">Variant<br/>Generator</div>
-            </div>
-            <div class="s-loop-arrow">→</div>
-            <div class="s-loop-node accent">
-              <div class="t">03</div>
-              <div class="n">Bayesian<br/>Allocator</div>
-            </div>
-            <div class="s-loop-arrow">→</div>
-            <div class="s-loop-node">
-              <div class="t">04</div>
-              <div class="n">Audience</div>
-            </div>
-            <div class="s-loop-arrow">→</div>
-            <div class="s-loop-node">
-              <div class="t">05</div>
-              <div class="n">Posteriors</div>
+            <div class="s-arch-cell">
+              <div class="s-arch-logo">
+                <img
+                  class="logo-resend"
+                  src="assets/logos/resend-logo.svg"
+                  alt="Resend"
+                />
+              </div>
+              <div class="s-arch-tag">Delivery</div>
+              <div class="s-arch-name">Resend</div>
+              <div class="s-arch-role">
+                Transactional and marketing send with event hooks.
+              </div>
             </div>
           </div>
 
-          <svg class="s-loop-arcs" viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <marker id="arr-rust" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#b25a3c" />
-              </marker>
-              <marker id="arr-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#5e7488" />
-              </marker>
-            </defs>
-            <!-- allocation loop: posteriors (x≈900) back to allocator (x≈500) -->
-            <path d="M 900 6 C 900 100, 500 100, 500 6"
-                  fill="none" stroke="#b25a3c" stroke-width="1.6"
-                  marker-end="url(#arr-rust)" vector-effect="non-scaling-stroke" />
-            <!-- generation loop: posteriors (x≈900) back to variant generator (x≈300) -->
-            <path d="M 900 6 C 900 190, 300 190, 300 6"
-                  fill="none" stroke="#5e7488" stroke-width="1.6"
-                  stroke-dasharray="5 4"
-                  marker-end="url(#arr-slate)" vector-effect="non-scaling-stroke" />
-          </svg>
-
-          <div class="s-loop-legends">
-            <div class="s-loop-legend">
-              <span class="swatch"></span>
-              <span>Allocation Loop · re-weight to winners</span>
-            </div>
-            <div class="s-loop-legend">
-              <span class="swatch slate"></span>
-              <span>Generation Loop · propose new variants</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="meta-left">Eigen · Founding Round</div>
-        <div class="meta-right">09 / 09</div>
-      </section>
-
+          <div class="meta-left">Eigen · Founding Round</div>
+          <div class="meta-right">10 / 10</div>
+        </section>
+      </div>
     </div>
-  </div>
 
-  <!-- Overview grid -->
-  <div class="overview" id="overview">
-    <div class="overview-head">
-      <div class="label">Overview · 9 Slides</div>
-      <div class="label">Esc · Close</div>
+    <!-- Overview grid -->
+    <div class="overview" id="overview">
+      <div class="overview-head">
+        <div class="label">Overview · 10 Slides</div>
+        <div class="label">Esc · Close</div>
+      </div>
+      <div class="overview-grid" id="overviewGrid"></div>
     </div>
-    <div class="overview-grid" id="overviewGrid"></div>
-  </div>
 
-  <!-- Hint shown briefly on load -->
-  <div class="hint" id="hint">← → Navigate · Esc Overview</div>
+    <!-- Hint shown briefly on load -->
+    <div class="hint" id="hint">← → Navigate · Esc Overview</div>
 
-<script>
-(function() {
-  const slides = Array.from(document.querySelectorAll('.slide:not([hidden])'));
-  const total = slides.length;
-  let idx = 0;
+    <script>
+      (function () {
+        const slides = Array.from(
+          document.querySelectorAll(".slide:not([hidden])"),
+        );
+        const total = slides.length;
+        let idx = 0;
 
-  function show(n, { skipHash = false } = {}) {
-    n = Math.max(0, Math.min(total - 1, n));
-    slides.forEach((s, i) => s.classList.toggle('active', i === n));
-    idx = n;
-    if (!skipHash) {
-      history.replaceState(null, '', '#' + (n + 1));
-    }
-    document.querySelectorAll('.overview-tile').forEach((t, i) => {
-      t.classList.toggle('current', i === n);
-    });
-  }
+        function show(n, { skipHash = false } = {}) {
+          n = Math.max(0, Math.min(total - 1, n));
+          slides.forEach((s, i) => s.classList.toggle("active", i === n));
+          idx = n;
+          if (!skipHash) {
+            history.replaceState(null, "", "#" + (n + 1));
+          }
+          document.querySelectorAll(".overview-tile").forEach((t, i) => {
+            t.classList.toggle("current", i === n);
+          });
+        }
 
-  function next() { show(idx + 1); }
-  function prev() { show(idx - 1); }
+        function next() {
+          show(idx + 1);
+        }
+        function prev() {
+          show(idx - 1);
+        }
 
-  document.addEventListener('keydown', (e) => {
-    const ov = document.getElementById('overview');
-    if (e.key === 'Escape') {
-      ov.classList.toggle('active');
-      return;
-    }
-    if (ov.classList.contains('active')) {
-      if (e.key === 'Enter') {
-        ov.classList.remove('active');
-      }
-      return;
-    }
-    switch (e.key) {
-      case 'ArrowRight':
-      case 'PageDown':
-      case ' ':
-        e.preventDefault();
-        next();
-        break;
-      case 'ArrowLeft':
-      case 'PageUp':
-        e.preventDefault();
-        prev();
-        break;
-      case 'Home':
-        show(0);
-        break;
-      case 'End':
-        show(total - 1);
-        break;
-    }
-  });
+        document.addEventListener("keydown", (e) => {
+          const ov = document.getElementById("overview");
+          if (e.key === "Escape") {
+            ov.classList.toggle("active");
+            return;
+          }
+          if (ov.classList.contains("active")) {
+            if (e.key === "Enter") {
+              ov.classList.remove("active");
+            }
+            return;
+          }
+          switch (e.key) {
+            case "ArrowRight":
+            case "PageDown":
+            case " ":
+              e.preventDefault();
+              next();
+              break;
+            case "ArrowLeft":
+            case "PageUp":
+              e.preventDefault();
+              prev();
+              break;
+            case "Home":
+              show(0);
+              break;
+            case "End":
+              show(total - 1);
+              break;
+          }
+        });
 
-  // Click anywhere on the deck (not on links) advances. Click + shift goes back.
-  document.getElementById('deck').addEventListener('click', (e) => {
-    if (e.target.closest('a')) return;
-    if (e.shiftKey) prev(); else next();
-  });
+        // Click anywhere on the deck (not on links) advances. Click + shift goes back.
+        document.getElementById("deck").addEventListener("click", (e) => {
+          if (e.target.closest("a")) return;
+          if (e.shiftKey) prev();
+          else next();
+        });
 
-  // Build overview thumbnails
-  const grid = document.getElementById('overviewGrid');
-  slides.forEach((s, i) => {
-    const tile = document.createElement('div');
-    tile.className = 'overview-tile';
-    tile.dataset.idx = i;
-    tile.innerHTML = `
+        // Build overview thumbnails
+        const grid = document.getElementById("overviewGrid");
+        slides.forEach((s, i) => {
+          const tile = document.createElement("div");
+          tile.className = "overview-tile";
+          tile.dataset.idx = i;
+          tile.innerHTML = `
       <div class="thumb">${s.outerHTML}</div>
-      <div class="num">${String(i + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}</div>
+      <div class="num">${String(i + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}</div>
     `;
-    // Force the cloned slide active for the thumbnail
-    const clonedSlide = tile.querySelector('.slide');
-    clonedSlide.classList.add('active');
-    clonedSlide.style.opacity = '1';
-    clonedSlide.style.visibility = 'visible';
-    tile.addEventListener('click', () => {
-      show(i);
-      document.getElementById('overview').classList.remove('active');
-    });
-    grid.appendChild(tile);
-  });
+          // Force the cloned slide active for the thumbnail
+          const clonedSlide = tile.querySelector(".slide");
+          clonedSlide.classList.add("active");
+          clonedSlide.style.opacity = "1";
+          clonedSlide.style.visibility = "visible";
+          tile.addEventListener("click", () => {
+            show(i);
+            document.getElementById("overview").classList.remove("active");
+          });
+          grid.appendChild(tile);
+        });
 
-  // Deep link via hash (#3 → slide 3)
-  const initial = parseInt((location.hash || '').replace('#', ''), 10);
-  if (!isNaN(initial) && initial >= 1 && initial <= total) {
-    show(initial - 1, { skipHash: true });
-  } else {
-    show(0, { skipHash: true });
-  }
+        // Deep link via hash (#3 → slide 3)
+        const initial = parseInt((location.hash || "").replace("#", ""), 10);
+        if (!isNaN(initial) && initial >= 1 && initial <= total) {
+          show(initial - 1, { skipHash: true });
+        } else {
+          show(0, { skipHash: true });
+        }
 
-  // Briefly show hint on load
-  const hint = document.getElementById('hint');
-  hint.classList.add('show');
-  setTimeout(() => hint.classList.remove('show'), 2400);
-})();
-</script>
-</body>
+        // Briefly show hint on load
+        const hint = document.getElementById("hint");
+        hint.classList.add("show");
+        setTimeout(() => hint.classList.remove("show"), 2400);
+      })();
+    </script>
+  </body>
 </html>
