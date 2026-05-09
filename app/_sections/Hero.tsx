@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { CTAButton } from "@/app/_components/CTAButton";
 import { Logo } from "@/app/_components/Logo";
+import { SignInLink } from "@/app/_components/SignInLink";
 import { CHECKOUT_URL, SPOTS_REMAINING, SPOTS_TOTAL } from "@/app/_lib/constants";
 
 export function Hero() {
@@ -40,7 +41,10 @@ export function Hero() {
 
         {/* Content — 40% */}
         <div className="md:col-span-2 flex flex-col justify-between p-8 md:p-12">
-          <Logo />
+          <div className="flex items-baseline justify-between">
+            <Logo />
+            <SignInLink />
+          </div>
 
           <div className="flex-1 flex flex-col justify-center max-w-xl py-12">
             <h1 className="font-display text-[52px] leading-[0.95] md:text-[88px] md:leading-[0.92]">

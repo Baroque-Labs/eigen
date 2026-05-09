@@ -30,9 +30,17 @@ export default async function CampaignDetailPage({ params }: { params: Params })
       </Link>
       <div className="flex items-baseline justify-between mt-2 mb-1">
         <h1 className="font-serif text-3xl">{campaign.name}</h1>
-        <span className="text-xs text-ink/50">
-          {STATUS_LABEL[campaign.status] ?? campaign.status}
-        </span>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/campaigns/${campaign.id}/edit`}
+            className="text-xs text-ink/50 hover:text-ink/80"
+          >
+            Edit
+          </Link>
+          <span className="text-xs text-ink/50">
+            {STATUS_LABEL[campaign.status] ?? campaign.status}
+          </span>
+        </div>
       </div>
       <p className="text-xs font-mono text-ink/40 mb-8">{campaign.id}</p>
 

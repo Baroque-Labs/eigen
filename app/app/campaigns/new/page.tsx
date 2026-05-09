@@ -1,7 +1,11 @@
 import Link from "next/link";
-import { NewCampaignForm } from "./NewCampaignForm";
+import { requireOrg } from "@/app/_lib/auth/org";
+import { createCampaign } from "@/app/_lib/campaigns/actions";
+import { CampaignForm } from "@/app/app/campaigns/_components/CampaignForm";
 
-export default function NewCampaignPage() {
+export default async function NewCampaignPage() {
+  const { greetingName } = await requireOrg();
+
   return (
     <div className="max-w-2xl">
       <Link
@@ -15,7 +19,12 @@ export default function NewCampaignPage() {
         Draft a baseline email. Eigen will generate variants from it once you
         approve them.
       </p>
-      <NewCampaignForm />
+      <CampaignForm
+        action={createCampaign}
+        greetingName={greetingName}
+        submitLabel="Create campaign"
+        pendingLabel="Creating…"
+      />
     </div>
   );
 }
