@@ -1,9 +1,9 @@
 import { BetaPlot } from "./BetaPlot";
 import { AllocatorDiagram } from "./Allocator";
 
-const STRIPE_LINK = "STRIPE_LINK_HERE";
-const SPOTS_REMAINING = 10;
+const SPOTS_REMAINING = 9;
 const SPOTS_TOTAL = 10;
+const CHECKOUT_URL = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK ?? "#";
 
 export default function Page() {
   return (
@@ -69,13 +69,13 @@ function Hero() {
             </h1>
             <p className="mt-8 text-[19px] leading-relaxed text-ink/80 max-w-md">
               Eigen runs Thompson sampling over your variants in production —
-              killing losers, compounding winners, and spawning new variants
-              the moment a test reaches significance. Continuously. Bayesianly.
+              killing losers, compounding winners, and spawning new variants the
+              moment a test reaches significance. Continuously. Bayesianly.
             </p>
 
             <div className="mt-10 flex flex-col items-start gap-3">
               <a
-                href="#founding"
+                href={CHECKOUT_URL}
                 className="inline-block bg-ink text-paper px-6 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink/90 transition-colors"
               >
                 Claim a founding spot — $100
@@ -124,9 +124,9 @@ function Allocator() {
         </div>
 
         <p className="mt-8 max-w-[68ch] font-mono text-[12px] leading-relaxed text-paper/60">
-          Each send is evidence. Posteriors update. Allocation tracks
-          Pr(variant is best). Winners compound, losers retire, and new
-          variants spawn from the leader — automatically.
+          Each send is evidence. Posteriors update. Allocation tracks Pr(variant
+          is best). Winners compound, losers retire, and new variants spawn from
+          the leader — automatically.
         </p>
       </div>
     </section>
@@ -190,10 +190,11 @@ function MathSection() {
             The posterior update
           </p>
           <pre className="border border-ink p-6 md:p-8 font-mono text-[15px] md:text-[18px] leading-relaxed overflow-x-auto">
-{`Beta(α, β) + (s, f)  →  Beta(α + s, β + f)`}
+            {`Beta(α, β) + (s, f)  →  Beta(α + s, β + f)`}
           </pre>
           <p className="mt-4 font-mono text-[12px] text-ink/60">
-            s = successes since last update, f = failures. Two integers. That&apos;s the whole state.
+            s = successes since last update, f = failures. Two integers.
+            That&apos;s the whole state.
           </p>
         </div>
       </div>
@@ -211,10 +212,7 @@ function Founding() {
   ];
 
   return (
-    <section
-      id="founding"
-      className="bg-paper text-ink border-b border-ink"
-    >
+    <section id="founding" className="bg-paper text-ink border-b border-ink">
       <SectionMark />
 
       <div className="px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
@@ -247,7 +245,7 @@ function Founding() {
 
             <div className="mt-10 flex flex-col items-start gap-3">
               <a
-                href={STRIPE_LINK}
+                href={CHECKOUT_URL}
                 className="inline-block bg-ink text-paper px-7 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink/90 transition-colors"
               >
                 Claim a founding spot — $100
@@ -359,11 +357,7 @@ function Footer() {
 
 function SectionMark({ dark = false }: { dark?: boolean }) {
   return (
-    <div
-      className={`px-8 md:px-16 pt-8 ${
-        dark ? "text-paper" : "text-ink"
-      }`}
-    >
+    <div className={`px-8 md:px-16 pt-8 ${dark ? "text-paper" : "text-ink"}`}>
       <span className="font-serif text-[32px] leading-none">λ</span>
     </div>
   );
