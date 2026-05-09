@@ -85,15 +85,15 @@ function Hero() {
               >
                 Claim a founding spot — $100
               </a>
-              <span className="font-mono text-[12px] text-ink/70">
-                {SPOTS_REMAINING} of {SPOTS_TOTAL} spots remaining
-              </span>
               <a
                 href="/demo"
-                className="mt-2 font-mono text-[12px] uppercase tracking-[0.18em] text-ink/70 hover:text-ink underline underline-offset-4 decoration-ink/40 hover:decoration-ink transition-colors"
+                className="inline-block border border-ink text-ink px-6 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink hover:text-paper transition-colors"
               >
-                Try the demo →
+                Try the live demo →
               </a>
+              <span className="font-mono text-[12px] text-ink/70 mt-1">
+                {SPOTS_REMAINING} of {SPOTS_TOTAL} spots remaining
+              </span>
             </div>
           </div>
 
