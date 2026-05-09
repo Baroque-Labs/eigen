@@ -1,7 +1,7 @@
 import { BetaPlot } from "./BetaPlot";
 import { AllocatorDiagram } from "./Allocator";
 
-const SPOTS_REMAINING = 10;
+const SPOTS_REMAINING = 9;
 const SPOTS_TOTAL = 10;
 const CHECKOUT_URL = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK ?? "#";
 
