@@ -30,17 +30,6 @@ All three are used only in the hero, where they crossfade on a 24s loop (8s per 
 - `STRIPE_LINK_HERE` — search `app/page.tsx` for the Stripe Payment Link
 - `SPOTS_REMAINING` — top of `app/page.tsx`, currently `7`
 - OG image — `public/og.png` (referenced in `app/layout.tsx`)
-- Footer Twitter href — `https://twitter.com/`
-- Footer email — `hello@eigen.email`
-
-## Deploy
-
-```bash
-npm i -g vercel
-vercel
-```
-
-Or push to GitHub and import the repo at [vercel.com/new](https://vercel.com/new). No environment variables required.
 
 ## Structure
 
