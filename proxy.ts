@@ -37,6 +37,15 @@ export default clerkMiddleware(async (auth, req) => {
   const host = stripPort(req.headers.get("host") ?? "").toLowerCase();
   const { pathname } = req.nextUrl;
 
+  // /api/* always passes through to the route handler — no host
+  // rewrite, no Clerk gate. Webhooks (Inngest, Resend, ...) reach us
+  // here and authenticate via their own signature schemes. Per-route
+  // user-facing APIs can still call auth() from @clerk/nextjs/server
+  // and decide their own response if no user is signed in.
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
   const isAppHost =
     host === APP_HOST.toLowerCase() || host === "app.localhost";
   const isTrackHost =
