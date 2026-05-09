@@ -1,40 +1,8 @@
 // Static SVG of three Beta posteriors plotted on a shared y-axis.
 // Computed at module load — no runtime cost beyond first render.
 
-const lanczosG = 7;
-const lanczosC = [
-  0.99999999999980993, 676.5203681218851, -1259.1392167224028,
-  771.32342877765313, -176.61502916214059, 12.507343278686905,
-  -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7,
-];
-
-function lgamma(x: number): number {
-  if (x < 0.5) {
-    return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x);
-  }
-  x -= 1;
-  let a = lanczosC[0];
-  const t = x + lanczosG + 0.5;
-  for (let i = 1; i < lanczosC.length; i++) a += lanczosC[i] / (x + i);
-  return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
-}
-
-function logBetaPdf(x: number, alpha: number, beta: number): number {
-  if (x <= 0 || x >= 1) return -Infinity;
-  return (
-    (alpha - 1) * Math.log(x) +
-    (beta - 1) * Math.log(1 - x) -
-    (lgamma(alpha) + lgamma(beta) - lgamma(alpha + beta))
-  );
-}
-
-type Variant = { label: string; successes: number; trials: number };
-
-const variants: Variant[] = [
-  { label: "Variant A: 47/200", successes: 47, trials: 200 },
-  { label: "Variant B: 89/210", successes: 89, trials: 210 },
-  { label: "Variant C: 12/180", successes: 12, trials: 180 },
-];
+import { logBetaPdf } from "@/app/_lib/beta";
+import { MATH_VARIANTS, type MathVariant } from "@/app/_data/math-variants";
 
 // Plot domain: 0 → 0.6 covers all three peaks comfortably
 const X_MIN = 0;
@@ -52,7 +20,7 @@ const plotW = VIEW_W - PAD_L - PAD_R;
 const plotH = VIEW_H - PAD_T - PAD_B;
 
 type Curve = {
-  variant: Variant;
+  variant: MathVariant;
   alpha: number;
   beta: number;
   points: { x: number; y: number; px: number; py: number }[];
@@ -60,7 +28,7 @@ type Curve = {
   peakY: number;
 };
 
-const curves: Curve[] = variants.map((v) => {
+const curves: Curve[] = MATH_VARIANTS.map((v) => {
   const alpha = 1 + v.successes;
   const beta = 1 + (v.trials - v.successes);
   const points: Curve["points"] = [];

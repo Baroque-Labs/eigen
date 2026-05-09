@@ -1,4 +1,4 @@
-// Beta distribution utilities — Thompson sampling and PDF for visualization.
+// Beta distribution utilities — Thompson sampling, PDF, and Lanczos gamma.
 
 const lanczosG = 7;
 const lanczosC = [
@@ -18,13 +18,18 @@ export function lgamma(x: number): number {
   return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
 }
 
-export function betaPdf(x: number, alpha: number, beta: number): number {
-  if (x <= 0 || x >= 1) return 0;
-  const log =
+export function logBetaPdf(x: number, alpha: number, beta: number): number {
+  if (x <= 0 || x >= 1) return -Infinity;
+  return (
     (alpha - 1) * Math.log(x) +
     (beta - 1) * Math.log(1 - x) -
-    (lgamma(alpha) + lgamma(beta) - lgamma(alpha + beta));
-  return Math.exp(log);
+    (lgamma(alpha) + lgamma(beta) - lgamma(alpha + beta))
+  );
+}
+
+export function betaPdf(x: number, alpha: number, beta: number): number {
+  if (x <= 0 || x >= 1) return 0;
+  return Math.exp(logBetaPdf(x, alpha, beta));
 }
 
 export function betaMean(alpha: number, beta: number): number {
