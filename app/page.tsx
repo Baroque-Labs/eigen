@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { BetaPlot } from "./BetaPlot";
 import { AllocatorDiagram } from "./Allocator";
 
@@ -27,23 +28,27 @@ function Hero() {
         {/* Image — 60% on desktop, full-bleed on mobile.
             Three Monet "Houses of Parliament" paintings crossfade on a 24s loop. */}
         <div className="relative md:col-span-3 border-b md:border-b-0 md:border-r border-ink overflow-hidden grain bg-ink">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/parliament-sunset.jpg"
             alt="Houses of Parliament, Sunset — Monet, 1903"
-            className="monet-1 absolute inset-0 h-full w-full object-cover"
+            fill
+            priority
+            sizes="(min-width: 768px) 60vw, 100vw"
+            className="monet-1 object-cover"
           />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/parliament-fog.jpg"
             alt="Houses of Parliament, Effect of Fog — Monet, 1904"
-            className="monet-2 absolute inset-0 h-full w-full object-cover"
+            fill
+            sizes="(min-width: 768px) 60vw, 100vw"
+            className="monet-2 object-cover"
           />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/parliament-stormy.jpg"
             alt="Houses of Parliament, Stormy Sky — Monet, 1904"
-            className="monet-3 absolute inset-0 h-full w-full object-cover"
+            fill
+            sizes="(min-width: 768px) 60vw, 100vw"
+            className="monet-3 object-cover"
           />
 
           {/* Reference / image credit — overlaid on the image */}
