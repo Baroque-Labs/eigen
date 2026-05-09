@@ -27,7 +27,7 @@ function Hero() {
       <div className="grid min-h-screen grid-cols-1 md:grid-cols-5">
         {/* Image — 60% on desktop, full-bleed on mobile.
             Three Monet "Houses of Parliament" paintings crossfade on a 24s loop. */}
-        <div className="relative md:col-span-3 border-b md:border-b-0 md:border-r border-ink overflow-hidden grain bg-ink">
+        <div className="relative h-[60vh] md:h-auto md:col-span-3 border-b md:border-b-0 md:border-r border-ink overflow-hidden grain bg-ink">
           <Image
             src="/parliament-sunset.jpg"
             alt="Houses of Parliament, Sunset — Monet, 1903"
@@ -69,7 +69,7 @@ function Hero() {
 
           {/* Centered headline block */}
           <div className="flex-1 flex flex-col justify-center max-w-xl py-12">
-            <h1 className="font-display text-[64px] leading-[0.95] md:text-[88px] md:leading-[0.92]">
+            <h1 className="font-display text-[52px] leading-[0.95] md:text-[88px] md:leading-[0.92]">
               Email that optimizes itself.
             </h1>
             <p className="mt-8 text-[19px] leading-relaxed text-ink/80 max-w-md">
@@ -78,20 +78,20 @@ function Hero() {
               moment a test reaches significance. Continuously. Bayesianly.
             </p>
 
-            <div className="mt-10 flex flex-col items-start gap-3">
+            <div className="mt-10 flex flex-col items-stretch md:items-start gap-3">
               <a
                 href={CHECKOUT_URL}
-                className="inline-block bg-ink text-paper px-6 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink/90 transition-colors"
+                className="block md:inline-block text-center md:text-left bg-ink text-paper px-6 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink/90 transition-colors"
               >
                 Claim a founding spot — $100
               </a>
               <a
                 href="/demo"
-                className="inline-block border border-ink text-ink px-6 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink hover:text-paper transition-colors"
+                className="block md:inline-block text-center md:text-left border border-ink text-ink px-6 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink hover:text-paper transition-colors"
               >
                 Try the live demo →
               </a>
-              <span className="font-mono text-[12px] text-ink/70 mt-1">
+              <span className="font-mono text-[12px] text-ink/70 mt-1 text-center md:text-left">
                 {SPOTS_REMAINING} of {SPOTS_TOTAL} spots remaining
               </span>
             </div>
@@ -114,7 +114,7 @@ function Allocator() {
   return (
     <section className="section-black bg-ink text-paper border-b border-paper">
       <SectionMark dark />
-      <div className="px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
+      <div className="px-8 md:px-16 pt-10 md:pt-16 pb-20 md:pb-40">
         <div className="max-w-[1100px]">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-paper/60 mb-10">
             Allocation + generation
@@ -158,7 +158,7 @@ function MathSection() {
         λ
       </div>
 
-      <div className="relative px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
+      <div className="relative px-8 md:px-16 pt-10 md:pt-16 pb-20 md:pb-40">
         <div className="max-w-[820px]">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60 mb-10">
             The math
@@ -229,7 +229,7 @@ function Founding() {
     <section id="founding" className="bg-paper text-ink border-b border-ink">
       <SectionMark />
 
-      <div className="px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
+      <div className="px-8 md:px-16 pt-10 md:pt-16 pb-20 md:pb-40">
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 md:col-span-7">
             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60 mb-10">
@@ -257,14 +257,14 @@ function Founding() {
               ))}
             </ul>
 
-            <div className="mt-10 flex flex-col items-start gap-3">
+            <div className="mt-10 flex flex-col items-stretch md:items-start gap-3">
               <a
                 href={CHECKOUT_URL}
-                className="inline-block bg-ink text-paper px-7 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink/90 transition-colors"
+                className="block md:inline-block text-center md:text-left bg-ink text-paper px-7 py-4 text-[15px] font-medium tracking-tight rounded-[4px] hover:bg-ink/90 transition-colors"
               >
                 Claim a founding spot — $100
               </a>
-              <span className="font-mono text-[12px] text-ink/70">
+              <span className="font-mono text-[12px] text-ink/70 text-center md:text-left">
                 {SPOTS_REMAINING} of {SPOTS_TOTAL} spots remaining
               </span>
             </div>
@@ -300,7 +300,7 @@ function FAQ() {
   return (
     <section className="section-black bg-ink text-paper border-b border-paper">
       <SectionMark dark />
-      <div className="px-8 md:px-16 pt-12 md:pt-16 pb-28 md:pb-40">
+      <div className="px-8 md:px-16 pt-10 md:pt-16 pb-20 md:pb-40">
         <div className="max-w-[1100px]">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-paper/60 mb-10">
             Questions
