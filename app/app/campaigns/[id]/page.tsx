@@ -5,6 +5,7 @@ import { getDecisions, getPendingVariants } from "@/app/_lib/backend/campaigns";
 import { getVerifiedDomain } from "@/app/_lib/domains/queries";
 import { SendTestButton } from "./SendTestButton";
 import { LaunchButton } from "./LaunchButton";
+import { AutoRefresh } from "./_components/AutoRefresh";
 
 type Params = Promise<{ id: string }>;
 
@@ -49,14 +50,17 @@ export default async function CampaignDetailPage({ params }: { params: Params })
           <LaunchButton campaignId={campaign.id} disabled={campaign.status !== "running"} />
         </div>
       </div>
-      <p className="text-[10px] font-mono text-ink/40 mb-8">
-        #{campaign.id} · {campaign.total_sends.toLocaleString()} sends ·{" "}
-        {campaign.total_clicks.toLocaleString()} clicks ·{" "}
-        {campaign.total_sends > 0
-          ? pct(campaign.total_clicks / campaign.total_sends)
-          : "—"}{" "}
-        CTR
-      </p>
+      <div className="flex items-center justify-between mb-8">
+        <p className="text-[10px] font-mono text-ink/40">
+          #{campaign.id} · {campaign.total_sends.toLocaleString()} sends ·{" "}
+          {campaign.total_clicks.toLocaleString()} clicks ·{" "}
+          {campaign.total_sends > 0
+            ? pct(campaign.total_clicks / campaign.total_sends)
+            : "—"}{" "}
+          CTR
+        </p>
+        <AutoRefresh intervalMs={3000} />
+      </div>
 
       {campaign.status === "stopped" && campaign.stopped_reason ? (
         <div className="border-l-4 border-[#8B3A2C] pl-4 mb-8">

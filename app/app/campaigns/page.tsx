@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listCampaigns } from "@/app/_lib/campaigns/queries";
+import { AutoRefresh } from "./_components/AutoRefresh";
 
 const STATUS_LABEL: Record<string, string> = {
   running: "RUNNING",
@@ -18,12 +19,15 @@ export default async function CampaignsPage() {
     <div className="max-w-5xl">
       <div className="flex items-baseline justify-between mb-10">
         <h1 className="font-serif text-4xl tracking-tight">Campaigns</h1>
+        <div className="flex items-center gap-6">
+          <AutoRefresh intervalMs={3000} />
         <Link
           href="/campaigns/new"
           className="px-3 py-1.5 text-xs font-mono uppercase tracking-[0.12em] bg-ink text-paper hover:bg-ink/90"
         >
           New campaign
         </Link>
+        </div>
       </div>
 
       {campaigns.length === 0 ? (
