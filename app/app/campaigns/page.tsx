@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listCampaigns } from "@/app/_lib/campaigns/queries";
 import { AutoRefresh } from "./_components/AutoRefresh";
+import { DeleteCampaignButton } from "./_components/DeleteCampaignButton";
 
 const STATUS_LABEL: Record<string, string> = {
   running: "RUNNING",
@@ -39,39 +40,42 @@ export default async function CampaignsPage() {
         </div>
       ) : (
         <div className="border border-ink/10">
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-4 py-3 border-b border-ink/10 text-[10px] font-mono uppercase tracking-[0.14em] text-ink/50">
+          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_40px] gap-4 px-4 py-3 border-b border-ink/10 text-[10px] font-mono uppercase tracking-[0.14em] text-ink/50">
             <div>Campaign</div>
             <div>Status</div>
             <div className="text-right">Variants</div>
             <div className="text-right">Sends</div>
             <div className="text-right">CTR</div>
+            <div></div>
           </div>
           {campaigns.map((c) => (
-            <Link
+            <div
               key={c.id}
-              href={`/campaigns/${c.id}`}
-              className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-4 py-4 border-b border-ink/10 last:border-b-0 hover:bg-ink/[0.02] items-baseline"
+              className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_40px] gap-4 px-4 py-4 border-b border-ink/10 last:border-b-0 hover:bg-ink/[0.02] items-baseline group"
             >
-              <div>
+              <Link href={`/campaigns/${c.id}`} className="block">
                 <div className="font-serif text-xl leading-tight">{c.name}</div>
                 <div className="text-[10px] font-mono text-ink/40 mt-1">
                   #{c.id}
                 </div>
-              </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-ink/70">
+              </Link>
+              <Link href={`/campaigns/${c.id}`} className="text-[10px] font-mono uppercase tracking-[0.12em] text-ink/70">
                 {STATUS_LABEL[c.status] ?? c.status}
-              </div>
-              <div className="text-right font-mono text-sm tabular-nums">
+              </Link>
+              <Link href={`/campaigns/${c.id}`} className="text-right font-mono text-sm tabular-nums">
                 {c.active_variants}
                 <span className="text-ink/40">/{c.n_variants}</span>
-              </div>
-              <div className="text-right font-mono text-sm tabular-nums">
+              </Link>
+              <Link href={`/campaigns/${c.id}`} className="text-right font-mono text-sm tabular-nums">
                 {c.total_sends.toLocaleString()}
-              </div>
-              <div className="text-right font-mono text-sm tabular-nums">
+              </Link>
+              <Link href={`/campaigns/${c.id}`} className="text-right font-mono text-sm tabular-nums">
                 {ctrLabel(c.total_clicks, c.total_sends)}
+              </Link>
+              <div className="text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                <DeleteCampaignButton campaignId={c.id} name={c.name} />
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}

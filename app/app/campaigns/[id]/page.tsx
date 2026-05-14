@@ -6,6 +6,7 @@ import { getVerifiedDomain } from "@/app/_lib/domains/queries";
 import { SendTestButton } from "./SendTestButton";
 import { LaunchButton } from "./LaunchButton";
 import { AutoRefresh } from "./_components/AutoRefresh";
+import { DeleteCampaignButton } from "../_components/DeleteCampaignButton";
 
 type Params = Promise<{ id: string }>;
 
@@ -48,6 +49,7 @@ export default async function CampaignDetailPage({ params }: { params: Params })
             <SendTestButton campaignId={campaign.id} />
           ) : null}
           <LaunchButton campaignId={campaign.id} disabled={campaign.status !== "running"} />
+          <DeleteCampaignButton campaignId={campaign.id} name={campaign.name} variant="labeled" />
         </div>
       </div>
       <div className="flex items-center justify-between mb-8">

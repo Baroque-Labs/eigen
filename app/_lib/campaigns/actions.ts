@@ -15,6 +15,7 @@ import {
   addRecipients,
   approveVariant as backendApprove,
   createCampaign as backendCreate,
+  deleteCampaign as backendDelete,
   getCampaignState,
   rejectVariant as backendReject,
   runResearch,
@@ -198,6 +199,19 @@ export async function runResearchAction(
   revalidatePath(`/campaigns/${cid}`);
   return {};
 }
+
+export async function deleteCampaignAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  await requireOrg();
+  const cid = Number(formData.get("campaign_id"));
+  if (!Number.isFinite(cid)) return { error: "Missing campaign id." };
+  await backendDelete(cid);
+  revalidatePath("/campaigns");
+  redirect("/campaigns");
+}
+
 
 export async function addRecipientsAction(
   _prev: { error?: string; added?: number } | null,

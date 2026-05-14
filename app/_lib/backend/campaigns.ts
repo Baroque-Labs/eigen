@@ -147,3 +147,7 @@ export async function addRecipients(
 ): Promise<{ added: number }> {
   return backendFetch(`/campaigns/${id}/recipients`, { body: { emails } });
 }
+
+export async function deleteCampaign(id: number): Promise<{ deleted: number }> {
+  return backendFetch(`/campaigns/${id}`, { method: "DELETE" });
+}
