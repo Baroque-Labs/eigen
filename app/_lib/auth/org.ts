@@ -34,6 +34,26 @@ function pickGreetingName(user: {
 }
 
 export const requireOrg = cache(async (): Promise<AuthedRequest> => {
+  // DEV-BYPASS: when EIGEN_DEV_BYPASS_CLERK=1, skip Clerk entirely and
+  // resolve to a fixed dev org. Used for local-network demos.
+  if (process.env.EIGEN_DEV_BYPASS_CLERK === "1") {
+    const db = getDb();
+    const greetingName = "Andrew";
+    const existing = await db
+      .select({ id: organizations.id, name: organizations.name })
+      .from(organizations)
+      .where(eq(organizations.name, "dev workspace"))
+      .limit(1);
+    if (existing.length > 0) {
+      return { userId: "dev-user", greetingName, org: existing[0] };
+    }
+    const [org] = await db
+      .insert(organizations)
+      .values({ name: "dev workspace" })
+      .returning({ id: organizations.id, name: organizations.name });
+    return { userId: "dev-user", greetingName, org };
+  }
+
   const user = await currentUser();
   if (!user) {
     // Clerk middleware should have redirected before this fires; the

@@ -8,9 +8,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // Sign-in and sign-up pages share this layout but have no signed-in
   // user yet. Render the children bare so Clerk's widgets can mount
   // without the dashboard chrome (and without trying to look up an org).
-  const user = await currentUser();
-  if (!user) {
-    return <>{children}</>;
+  if (process.env.EIGEN_DEV_BYPASS_CLERK !== "1") {
+    const user = await currentUser();
+    if (!user) {
+      return <>{children}</>;
+    }
   }
 
   const { greetingName, org } = await requireOrg();
@@ -43,11 +45,17 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </Link>
         </nav>
         <div className="mt-auto flex items-center gap-3">
-          <UserButton
-            appearance={{
-              elements: { rootBox: "flex items-center" },
-            }}
-          />
+          {process.env.EIGEN_DEV_BYPASS_CLERK === "1" ? (
+            <div className="w-8 h-8 rounded-full bg-ink/10 flex items-center justify-center text-xs font-mono">
+              {greetingName.slice(0, 1)}
+            </div>
+          ) : (
+            <UserButton
+              appearance={{
+                elements: { rootBox: "flex items-center" },
+              }}
+            />
+          )}
           <span className="text-sm text-ink/70">Hi, {greetingName}</span>
         </div>
       </aside>
