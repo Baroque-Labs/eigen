@@ -54,16 +54,16 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <ClerkProvider>
-      <html
-        lang="en"
-        className={`${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}
-      >
-        <body className="font-sans bg-paper text-ink antialiased">
-          {children}
-        </body>
-      </html>
-    </ClerkProvider>
+  const inner = (
+    <html
+      lang="en"
+      className={`${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+    >
+      <body className="font-sans bg-paper text-ink antialiased">
+        {children}
+      </body>
+    </html>
   );
+  if (process.env.EIGEN_DEV_BYPASS_CLERK === "1") return inner;
+  return <ClerkProvider>{inner}</ClerkProvider>;
 }
