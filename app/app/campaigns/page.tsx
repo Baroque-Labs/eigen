@@ -2,56 +2,74 @@ import Link from "next/link";
 import { listCampaigns } from "@/app/_lib/campaigns/queries";
 
 const STATUS_LABEL: Record<string, string> = {
-  draft: "Draft",
-  scheduled: "Scheduled",
-  running: "Running",
-  paused: "Paused",
-  done: "Done",
+  running: "RUNNING",
+  stopped: "STOPPED",
 };
+
+function ctrLabel(clicks: number, sends: number): string {
+  if (sends === 0) return "—";
+  return `${((clicks / sends) * 100).toFixed(1)}%`;
+}
 
 export default async function CampaignsPage() {
   const campaigns = await listCampaigns();
 
   return (
-    <div className="max-w-4xl">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="font-serif text-3xl">Campaigns</h1>
+    <div className="max-w-5xl">
+      <div className="flex items-baseline justify-between mb-10">
+        <h1 className="font-serif text-4xl tracking-tight">Campaigns</h1>
         <Link
           href="/campaigns/new"
-          className="px-3 py-1.5 text-sm rounded bg-ink text-paper hover:bg-ink/90"
+          className="px-3 py-1.5 text-xs font-mono uppercase tracking-[0.12em] bg-ink text-paper hover:bg-ink/90"
         >
-          + New campaign
+          New campaign
         </Link>
       </div>
 
       {campaigns.length === 0 ? (
-        <div className="border border-ink/10 rounded-lg p-12 text-center text-ink/60">
-          <p className="text-sm">No campaigns yet.</p>
-          <p className="text-sm mt-1">
-            Create one to draft a baseline email and let Eigen explore variants.
+        <div className="border border-ink/10 p-16 text-center">
+          <p className="font-serif text-2xl text-ink/70 mb-2">No campaigns yet.</p>
+          <p className="text-sm text-ink/50">
+            Draft a baseline email and let Eigen explore variants.
           </p>
         </div>
       ) : (
-        <ul className="border border-ink/10 rounded-lg divide-y divide-ink/10">
+        <div className="border border-ink/10">
+          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-4 py-3 border-b border-ink/10 text-[10px] font-mono uppercase tracking-[0.14em] text-ink/50">
+            <div>Campaign</div>
+            <div>Status</div>
+            <div className="text-right">Variants</div>
+            <div className="text-right">Sends</div>
+            <div className="text-right">CTR</div>
+          </div>
           {campaigns.map((c) => (
-            <li key={c.id}>
-              <Link
-                href={`/campaigns/${c.id}`}
-                className="flex items-center justify-between px-4 py-3 hover:bg-ink/5"
-              >
-                <div>
-                  <div className="text-sm font-medium">{c.name}</div>
-                  <div className="text-xs text-ink/50 mt-0.5">
-                    {c.baselineSubject}
-                  </div>
+            <Link
+              key={c.id}
+              href={`/campaigns/${c.id}`}
+              className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-4 py-4 border-b border-ink/10 last:border-b-0 hover:bg-ink/[0.02] items-baseline"
+            >
+              <div>
+                <div className="font-serif text-xl leading-tight">{c.name}</div>
+                <div className="text-[10px] font-mono text-ink/40 mt-1">
+                  #{c.id}
                 </div>
-                <div className="text-xs text-ink/50">
-                  {STATUS_LABEL[c.status] ?? c.status}
-                </div>
-              </Link>
-            </li>
+              </div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-ink/70">
+                {STATUS_LABEL[c.status] ?? c.status}
+              </div>
+              <div className="text-right font-mono text-sm tabular-nums">
+                {c.active_variants}
+                <span className="text-ink/40">/{c.n_variants}</span>
+              </div>
+              <div className="text-right font-mono text-sm tabular-nums">
+                {c.total_sends.toLocaleString()}
+              </div>
+              <div className="text-right font-mono text-sm tabular-nums">
+                {ctrLabel(c.total_clicks, c.total_sends)}
+              </div>
+            </Link>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

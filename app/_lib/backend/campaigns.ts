@@ -26,6 +26,7 @@ export type CohortPosterior = {
 export type VariantState = {
   id: number;
   subject: string;
+  body: string;
   status: "active" | "pending" | "killed" | "rejected";
   parent_id: number | null;
   cohorts: CohortPosterior[];

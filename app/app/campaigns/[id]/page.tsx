@@ -1,84 +1,203 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCampaign } from "@/app/_lib/campaigns/queries";
+import { getDecisions, getPendingVariants } from "@/app/_lib/backend/campaigns";
 import { getVerifiedDomain } from "@/app/_lib/domains/queries";
 import { SendTestButton } from "./SendTestButton";
+import { LaunchButton } from "./LaunchButton";
 
 type Params = Promise<{ id: string }>;
 
-const STATUS_LABEL: Record<string, string> = {
-  draft: "Draft",
-  scheduled: "Scheduled",
-  running: "Running",
-  paused: "Paused",
-  done: "Done",
-};
+function pct(n: number, places = 1): string {
+  return `${(n * 100).toFixed(places)}%`;
+}
+
+function fmt(n: number, places = 2): string {
+  return n.toFixed(places);
+}
 
 export default async function CampaignDetailPage({ params }: { params: Params }) {
   const { id } = await params;
   const campaign = await getCampaign(id);
   if (!campaign) notFound();
-  const verifiedDomain = await getVerifiedDomain();
+
+  const [decisions, pending, verifiedDomain] = await Promise.all([
+    getDecisions(campaign.id),
+    getPendingVariants(campaign.id),
+    getVerifiedDomain(),
+  ]);
+
+  const baseline = campaign.variants.find((v) => v.parent_id === null);
+  const allCohorts = Array.from(
+    new Set(campaign.variants.flatMap((v) => v.cohorts.map((c) => c.cohort))),
+  );
 
   return (
-    <div className="max-w-3xl">
-      <Link
-        href="/campaigns"
-        className="text-xs text-ink/50 hover:text-ink/80"
-      >
+    <div className="max-w-5xl">
+      <Link href="/campaigns" className="text-xs text-ink/50 hover:text-ink/80">
         ← Campaigns
       </Link>
       <div className="flex items-baseline justify-between mt-2 mb-1">
-        <h1 className="font-serif text-3xl">{campaign.name}</h1>
-        <div className="flex items-center gap-3">
-          <Link
-            href={`/campaigns/${campaign.id}/edit`}
-            className="text-xs text-ink/50 hover:text-ink/80"
-          >
-            Edit
-          </Link>
-          <span className="text-xs text-ink/50">
-            {STATUS_LABEL[campaign.status] ?? campaign.status}
+        <h1 className="font-serif text-4xl tracking-tight">{campaign.name}</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-ink/70">
+            {campaign.status}
           </span>
+          {verifiedDomain && baseline ? (
+            <SendTestButton campaignId={campaign.id} />
+          ) : null}
+          <LaunchButton campaignId={campaign.id} disabled={campaign.status !== "running"} />
         </div>
       </div>
-      <p className="text-xs font-mono text-ink/40 mb-8">{campaign.id}</p>
+      <p className="text-[10px] font-mono text-ink/40 mb-8">
+        #{campaign.id} · {campaign.total_sends.toLocaleString()} sends ·{" "}
+        {campaign.total_clicks.toLocaleString()} clicks ·{" "}
+        {campaign.total_sends > 0
+          ? pct(campaign.total_clicks / campaign.total_sends)
+          : "—"}{" "}
+        CTR
+      </p>
 
-      <section className="border border-ink/10 rounded-lg p-6 mb-6">
-        <div className="flex items-start justify-between mb-3">
-          <h2 className="text-xs uppercase tracking-wider text-ink/50">
-            Baseline email
-          </h2>
-          {verifiedDomain ? (
-            <SendTestButton campaignId={campaign.id} />
-          ) : (
-            <Link
-              href="/domains"
-              className="text-xs text-ink/50 hover:text-ink/80"
-            >
-              Verify a domain to enable test sends →
-            </Link>
-          )}
+      {campaign.status === "stopped" && campaign.stopped_reason ? (
+        <div className="border-l-4 border-[#8B3A2C] pl-4 mb-8">
+          <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#8B3A2C]">
+            Converged
+          </div>
+          <div className="font-serif text-lg mt-1">{campaign.stopped_reason}</div>
         </div>
-        <div className="text-sm font-medium mb-2">{campaign.baselineSubject}</div>
-        <pre className="text-sm whitespace-pre-wrap font-sans text-ink/80">
-          {campaign.baselineBodyMd}
-        </pre>
+      ) : null}
+
+      {pending.length > 0 ? (
+        <div className="mb-8 border border-ink/15 p-4 flex items-baseline justify-between">
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-ink/50">
+              Awaiting approval
+            </div>
+            <div className="font-serif text-xl">
+              {pending.length} variant{pending.length === 1 ? "" : "s"} pending review
+            </div>
+          </div>
+          <Link
+            href={`/campaigns/${campaign.id}/pending`}
+            className="px-3 py-1.5 text-xs font-mono uppercase tracking-[0.12em] bg-ink text-paper hover:bg-ink/90"
+          >
+            Review
+          </Link>
+        </div>
+      ) : null}
+
+      <section className="mb-12">
+        <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-ink/50 mb-4">
+          Variants
+        </div>
+        <div className="border border-ink/10">
+          {campaign.variants.map((v) => {
+            const totalSamples = v.cohorts.reduce(
+              (acc, c) => acc + c.samples,
+              0,
+            );
+            return (
+              <div
+                key={v.id}
+                className="border-b border-ink/10 last:border-b-0 px-4 py-4"
+              >
+                <div className="flex items-baseline justify-between mb-3">
+                  <div className="flex items-baseline gap-3">
+                    <div className="font-serif text-lg leading-tight">
+                      {v.subject}
+                    </div>
+                    {v.parent_id === null ? (
+                      <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-ink/40">
+                        baseline
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.12em]">
+                    <span className="text-ink/40">#{v.id}</span>
+                    <span
+                      className={
+                        v.status === "active"
+                          ? "text-ink/70"
+                          : v.status === "killed"
+                            ? "text-ink/30 line-through"
+                            : "text-[#8B3A2C]"
+                      }
+                    >
+                      {v.status}
+                    </span>
+                  </div>
+                </div>
+                {totalSamples > 0 ? (
+                  <div className="space-y-1">
+                    {v.cohorts.map((c) => (
+                      <div
+                        key={c.cohort}
+                        className="grid grid-cols-[80px_1fr_60px_60px_60px] gap-3 items-center text-xs font-mono tabular-nums"
+                      >
+                        <div className="text-ink/50 uppercase tracking-[0.1em] truncate">
+                          {c.cohort}
+                        </div>
+                        {/* CI bar: position the tick at mean across [0, ~0.2] */}
+                        <div className="relative h-3 border-t border-b border-ink/15">
+                          <div
+                            className="absolute top-0 bottom-0 w-px bg-ink"
+                            style={{ left: `${Math.min(100, c.mean * 500)}%` }}
+                            title={`mean=${fmt(c.mean, 3)}`}
+                          />
+                        </div>
+                        <div className="text-right text-ink/70">{pct(c.mean, 2)}</div>
+                        <div className="text-right text-ink/50">
+                          n={Math.round(c.samples)}
+                        </div>
+                        <div className="text-right text-ink/70">
+                          {pct(c.prob_best, 0)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs font-mono text-ink/40">
+                    No samples yet.
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {allCohorts.length > 1 ? (
+          <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.12em] text-ink/40">
+            Cohorts: {allCohorts.join(" · ")}
+          </div>
+        ) : null}
       </section>
 
-      <section className="border border-ink/10 rounded-lg p-6 text-sm text-ink/60">
-        <h2 className="text-xs uppercase tracking-wider text-ink/50 mb-3">
-          Next up
-        </h2>
-        <ol className="list-decimal pl-5 space-y-1">
-          <li>
-            {verifiedDomain
-              ? `Sending domain ${verifiedDomain.hostname} is verified.`
-              : "Verify a sending domain in Domains."}
-          </li>
-          <li>Eigen generates variants — approve them in the queue.</li>
-          <li>Upload a recipient list and launch.</li>
-        </ol>
+      <section className="mb-12">
+        <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-ink/50 mb-4">
+          Decisions
+        </div>
+        {decisions.length === 0 ? (
+          <p className="text-sm text-ink/50">No decisions yet.</p>
+        ) : (
+          <ol className="border border-ink/10 divide-y divide-ink/10">
+            {decisions.map((d) => (
+              <li
+                key={d.id}
+                className="px-4 py-3 grid grid-cols-[80px_60px_1fr_140px] gap-3 items-baseline"
+              >
+                <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-ink/50">
+                  {d.kind}
+                </div>
+                <div className="text-[10px] font-mono text-ink/40">
+                  {d.variant_id ? `v${d.variant_id}` : "—"}
+                </div>
+                <div className="text-sm text-ink/80">{d.reason}</div>
+                <div className="text-[10px] font-mono text-ink/40 text-right">
+                  {new Date(d.at).toLocaleString()}
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
     </div>
   );
