@@ -82,6 +82,9 @@ export const apiKeys = pgTable(
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
     keyHash: text("key_hash").notNull(),
+    // Raw backend API key. MVP only — encrypt at rest before going to prod
+    // (KMS, AWS Secrets Manager, or an envelope-encrypted column).
+    rawKey: text("raw_key"),
     label: text("label"),
     lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
