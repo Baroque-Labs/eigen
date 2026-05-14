@@ -83,6 +83,59 @@ export function CampaignForm({
         />
       </div>
 
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="n_variants" className="block text-sm mb-1">
+            Variants
+            <span className="text-ink/40 ml-2 font-mono text-xs">
+              target active count
+            </span>
+          </label>
+          <input
+            id="n_variants"
+            name="n_variants"
+            type="number"
+            min={1}
+            max={64}
+            defaultValue={4}
+            className="w-full border border-ink/15 rounded px-3 py-2 text-sm focus:outline-none focus:border-ink/40"
+          />
+        </div>
+        <div>
+          <label htmlFor="n_batches" className="block text-sm mb-1">
+            Batches
+            <span className="text-ink/40 ml-2 font-mono text-xs">
+              splits the recipient list
+            </span>
+          </label>
+          <input
+            id="n_batches"
+            name="n_batches"
+            type="number"
+            min={1}
+            defaultValue={10}
+            className="w-full border border-ink/15 rounded px-3 py-2 text-sm focus:outline-none focus:border-ink/40"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="emails" className="block text-sm mb-1">
+          Recipient emails
+          <span className="text-ink/40 ml-2 font-mono text-xs">
+            paste a list — comma, space, or newline separated
+          </span>
+        </label>
+        <textarea
+          id="emails"
+          name="emails"
+          required
+          rows={8}
+          placeholder="a@example.com&#10;b@example.com&#10;c@example.com"
+          className="w-full border border-ink/15 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink/40"
+        />
+      </div>
+
       {state?.error ? (
         <p className="text-sm text-red-700">{state.error}</p>
       ) : null}

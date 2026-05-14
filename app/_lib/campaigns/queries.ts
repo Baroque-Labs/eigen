@@ -1,32 +1,31 @@
-// Server-side queries for the campaigns surface. All queries scope to
-// the caller's org via requireOrg() so a leaked campaign id can't be
-// read across tenants.
+// Campaign queries. As of feat/dashboard, the canonical store for
+// campaigns/variants/sends/posteriors is eigen-backend — these functions
+// proxy to backend rather than reading from Drizzle directly.
+//
+// Drizzle remains the source of truth for organizations, memberships, and
+// the per-org backend API key (api_keys table).
 
 import "server-only";
-import { and, desc, eq } from "drizzle-orm";
-import { getDb } from "@/db";
-import { campaigns } from "@/db/schema";
-import { requireOrg } from "@/app/_lib/auth/org";
+import {
+  listCampaigns as backendList,
+  getCampaignState,
+  type CampaignListItem,
+  type CampaignState,
+} from "@/app/_lib/backend/campaigns";
 
-export type CampaignRow = typeof campaigns.$inferSelect;
+export type CampaignRow = CampaignListItem;
 
-export async function listCampaigns(): Promise<CampaignRow[]> {
-  const { org } = await requireOrg();
-  const db = getDb();
-  return db
-    .select()
-    .from(campaigns)
-    .where(eq(campaigns.orgId, org.id))
-    .orderBy(desc(campaigns.createdAt));
+export async function listCampaigns(): Promise<CampaignListItem[]> {
+  return backendList();
 }
 
-export async function getCampaign(id: string): Promise<CampaignRow | null> {
-  const { org } = await requireOrg();
-  const db = getDb();
-  const rows = await db
-    .select()
-    .from(campaigns)
-    .where(and(eq(campaigns.id, id), eq(campaigns.orgId, org.id)))
-    .limit(1);
-  return rows[0] ?? null;
+export async function getCampaign(id: string | number): Promise<CampaignState | null> {
+  const numId = typeof id === "string" ? Number(id) : id;
+  if (!Number.isFinite(numId)) return null;
+  try {
+    return await getCampaignState(numId);
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message.includes("backend 404")) return null;
+    throw e;
+  }
 }

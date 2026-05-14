@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { sendTestEmail } from "@/app/_lib/campaigns/actions";
 
-export function SendTestButton({ campaignId }: { campaignId: string }) {
+export function SendTestButton({ campaignId }: { campaignId: number | string }) {
   const [state, formAction, pending] = useActionState(sendTestEmail, null);
 
   return (
