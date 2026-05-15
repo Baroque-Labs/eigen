@@ -64,6 +64,47 @@ export default async function CampaignDetailPage({ params }: { params: Params })
         <AutoRefresh intervalMs={3000} />
       </div>
 
+      <div className="grid grid-cols-4 gap-6 mb-10 border border-ink/10 p-4">
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-ink/50 mb-1">
+            Cadence
+          </div>
+          <div className="font-mono text-sm">
+            {campaign.cadence_minutes} min · batch {campaign.batch_size}
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-ink/50 mb-1">
+            Days
+          </div>
+          <div className="font-mono text-sm">
+            {campaign.calendar.weekdays.length
+              ? campaign.calendar.weekdays
+                  .map((d) => ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][d])
+                  .join(" ")
+              : "any"}
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-ink/50 mb-1">
+            Hours · {campaign.timezone}
+          </div>
+          <div className="font-mono text-sm">
+            {campaign.calendar.hours.length
+              ? `${Math.min(...campaign.calendar.hours)}–${Math.max(...campaign.calendar.hours)}`
+              : "any"}
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-ink/50 mb-1">
+            Settle window
+          </div>
+          <div className="font-mono text-sm">
+            {(campaign.settle_window_seconds / 3600).toFixed(1)} h
+          </div>
+        </div>
+      </div>
+
       {campaign.status === "stopped" && campaign.stopped_reason ? (
         <div className="border-l-4 border-[#8B3A2C] pl-4 mb-8">
           <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#8B3A2C]">

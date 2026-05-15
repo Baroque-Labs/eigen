@@ -32,7 +32,11 @@ type ParsedFields = {
   baselineBodyMd: string;
   emails: string[];
   nVariants: number;
-  nBatches: number;
+  batchSize: number;
+  cadenceMinutes: number;
+  calendar: { weekdays: number[]; hours: number[] };
+  timezone: string;
+  settleWindowSeconds: number;
 };
 
 function parseEmails(raw: string): string[] {
@@ -42,13 +46,20 @@ function parseEmails(raw: string): string[] {
     .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
 }
 
+function parseIntList(formData: FormData, key: string): number[] {
+  return formData.getAll(key).map((v) => Number(v)).filter((n) => Number.isFinite(n));
+}
+
 function parseCampaignFields(formData: FormData): ParsedFields | string {
   const name = String(formData.get("name") ?? "").trim();
   const baselineSubject = String(formData.get("baseline_subject") ?? "").trim();
   const baselineBodyMd = String(formData.get("baseline_body_md") ?? "").trim();
   const emailsRaw = String(formData.get("emails") ?? "");
   const nVariants = Number(formData.get("n_variants") ?? 4);
-  const nBatches = Number(formData.get("n_batches") ?? 10);
+  const batchSize = Number(formData.get("batch_size") ?? 100);
+  const cadenceMinutes = Number(formData.get("cadence_minutes") ?? 60);
+  const timezone = String(formData.get("timezone") ?? "UTC").trim() || "UTC";
+  const settleWindowHours = Number(formData.get("settle_window_hours") ?? 24);
   if (!name) return "Name is required.";
   if (!baselineSubject) return "Baseline subject is required.";
   if (!baselineBodyMd) return "Baseline body is required.";
@@ -57,10 +68,24 @@ function parseCampaignFields(formData: FormData): ParsedFields | string {
   if (!Number.isFinite(nVariants) || nVariants < 1 || nVariants > 64) {
     return "Variants must be between 1 and 64.";
   }
-  if (!Number.isFinite(nBatches) || nBatches < 1) {
-    return "Batches must be a positive integer.";
-  }
-  return { name, baselineSubject, baselineBodyMd, emails, nVariants, nBatches };
+  if (!Number.isFinite(batchSize) || batchSize < 1) return "Batch size must be ≥ 1.";
+  if (!Number.isFinite(cadenceMinutes) || cadenceMinutes < 1) return "Cadence must be ≥ 1 minute.";
+  if (!Number.isFinite(settleWindowHours) || settleWindowHours < 0.01) return "Settle window must be > 0 hours.";
+  return {
+    name,
+    baselineSubject,
+    baselineBodyMd,
+    emails,
+    nVariants,
+    batchSize,
+    cadenceMinutes,
+    calendar: {
+      weekdays: parseIntList(formData, "weekdays"),
+      hours: parseIntList(formData, "hours"),
+    },
+    timezone,
+    settleWindowSeconds: Math.round(settleWindowHours * 3600),
+  };
 }
 
 export async function createCampaign(
@@ -78,7 +103,11 @@ export async function createCampaign(
       body: parsed.baselineBodyMd,
     },
     n_variants: parsed.nVariants,
-    n_batches: parsed.nBatches,
+    batch_size: parsed.batchSize,
+    cadence_minutes: parsed.cadenceMinutes,
+    calendar: parsed.calendar,
+    timezone: parsed.timezone,
+    settle_window_seconds: parsed.settleWindowSeconds,
     emails: parsed.emails,
   });
 

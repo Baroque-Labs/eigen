@@ -9,6 +9,8 @@ export type CampaignListItem = {
   status: "running" | "stopped";
   n_variants: number;
   active_variants: number;
+  batch_size: number;
+  cadence_minutes: number;
   total_sends: number;
   total_clicks: number;
   created_at: string;
@@ -32,13 +34,21 @@ export type VariantState = {
   cohorts: CohortPosterior[];
 };
 
+export type Calendar = {
+  weekdays: number[]; // 1=Mon..7=Sun
+  hours: number[]; // 0..23
+};
+
 export type CampaignState = {
   id: number;
   name: string;
   status: "running" | "stopped";
   n_variants: number;
-  n_batches: number;
   batch_size: number;
+  cadence_minutes: number;
+  calendar: Calendar;
+  timezone: string;
+  settle_window_seconds: number;
   variants: VariantState[];
   total_sends: number;
   total_clicks: number;
@@ -106,7 +116,11 @@ export type CreateCampaignInput = {
   name: string;
   baseline: { subject: string; body: string };
   n_variants: number;
-  n_batches: number;
+  batch_size: number;
+  cadence_minutes: number;
+  calendar: Calendar;
+  timezone: string;
+  settle_window_seconds: number;
   emails: string[];
 };
 

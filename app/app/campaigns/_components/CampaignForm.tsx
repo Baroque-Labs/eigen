@@ -83,13 +83,10 @@ export function CampaignForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div>
           <label htmlFor="n_variants" className="block text-sm mb-1">
             Variants
-            <span className="text-ink/40 ml-2 font-mono text-xs">
-              target active count
-            </span>
           </label>
           <input
             id="n_variants"
@@ -102,18 +99,105 @@ export function CampaignForm({
           />
         </div>
         <div>
-          <label htmlFor="n_batches" className="block text-sm mb-1">
-            Batches
-            <span className="text-ink/40 ml-2 font-mono text-xs">
-              splits the recipient list
-            </span>
+          <label htmlFor="batch_size" className="block text-sm mb-1">
+            Batch size
+            <span className="text-ink/40 ml-2 font-mono text-xs">recipients</span>
           </label>
           <input
-            id="n_batches"
-            name="n_batches"
+            id="batch_size"
+            name="batch_size"
             type="number"
             min={1}
-            defaultValue={10}
+            defaultValue={100}
+            className="w-full border border-ink/15 rounded px-3 py-2 text-sm focus:outline-none focus:border-ink/40"
+          />
+        </div>
+        <div>
+          <label htmlFor="cadence_minutes" className="block text-sm mb-1">
+            Cadence
+            <span className="text-ink/40 ml-2 font-mono text-xs">minutes</span>
+          </label>
+          <input
+            id="cadence_minutes"
+            name="cadence_minutes"
+            type="number"
+            min={1}
+            defaultValue={60}
+            className="w-full border border-ink/15 rounded px-3 py-2 text-sm focus:outline-none focus:border-ink/40"
+          />
+        </div>
+      </div>
+
+      <div>
+        <div className="text-sm mb-1">Calendar</div>
+        <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-ink/40 mb-2">
+          Days · check none = any
+        </div>
+        <div className="flex gap-3 flex-wrap mb-3">
+          {[
+            ["Mon", 1],
+            ["Tue", 2],
+            ["Wed", 3],
+            ["Thu", 4],
+            ["Fri", 5],
+            ["Sat", 6],
+            ["Sun", 7],
+          ].map(([label, val]) => (
+            <label key={val} className="text-xs flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="checkbox"
+                name="weekdays"
+                value={String(val)}
+                defaultChecked={[1, 2, 3, 4, 5].includes(val as number)}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+        <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-ink/40 mb-2">
+          Hours · check none = any
+        </div>
+        <div className="grid grid-cols-12 gap-2 mb-3">
+          {Array.from({ length: 24 }, (_, h) => h).map((h) => (
+            <label key={h} className="text-xs flex flex-col items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="hours"
+                value={String(h)}
+                defaultChecked={h >= 9 && h <= 17}
+              />
+              <span className="font-mono text-[10px] text-ink/50">{h}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="timezone" className="block text-sm mb-1">
+            Timezone
+          </label>
+          <input
+            id="timezone"
+            name="timezone"
+            type="text"
+            defaultValue="America/Denver"
+            placeholder="IANA tz, e.g. America/Denver"
+            className="w-full border border-ink/15 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink/40"
+          />
+        </div>
+        <div>
+          <label htmlFor="settle_window_hours" className="block text-sm mb-1">
+            Settle window
+            <span className="text-ink/40 ml-2 font-mono text-xs">hours (sim time)</span>
+          </label>
+          <input
+            id="settle_window_hours"
+            name="settle_window_hours"
+            type="number"
+            min={0.01}
+            step={0.01}
+            defaultValue={24}
             className="w-full border border-ink/15 rounded px-3 py-2 text-sm focus:outline-none focus:border-ink/40"
           />
         </div>
