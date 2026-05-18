@@ -113,18 +113,28 @@ export function CampaignForm({
           />
         </div>
         <div>
-          <label htmlFor="cadence_minutes" className="block text-sm mb-1">
+          <label htmlFor="cadence_value" className="block text-sm mb-1">
             Cadence
-            <span className="text-ink/40 ml-2 font-mono text-xs">minutes</span>
           </label>
-          <input
-            id="cadence_minutes"
-            name="cadence_minutes"
-            type="number"
-            min={1}
-            defaultValue={60}
-            className="w-full border border-ink/15 rounded px-3 py-2 text-sm focus:outline-none focus:border-ink/40"
-          />
+          <div className="flex gap-2">
+            <input
+              id="cadence_value"
+              name="cadence_value"
+              type="number"
+              min={1}
+              defaultValue={60}
+              className="w-full border border-ink/15 rounded px-3 py-2 text-sm focus:outline-none focus:border-ink/40"
+            />
+            <select
+              name="cadence_unit"
+              defaultValue="minutes"
+              className="border border-ink/15 rounded px-2 py-2 text-sm focus:outline-none focus:border-ink/40"
+            >
+              <option value="minutes">minutes</option>
+              <option value="hours">hours</option>
+              <option value="days">days</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -177,14 +187,49 @@ export function CampaignForm({
           <label htmlFor="timezone" className="block text-sm mb-1">
             Timezone
           </label>
-          <input
+          <select
             id="timezone"
             name="timezone"
-            type="text"
             defaultValue="America/Denver"
-            placeholder="IANA tz, e.g. America/Denver"
             className="w-full border border-ink/15 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-ink/40"
-          />
+          >
+            {[
+              "UTC",
+              "America/New_York",
+              "America/Chicago",
+              "America/Denver",
+              "America/Phoenix",
+              "America/Los_Angeles",
+              "America/Anchorage",
+              "Pacific/Honolulu",
+              "America/Toronto",
+              "America/Mexico_City",
+              "America/Sao_Paulo",
+              "Europe/London",
+              "Europe/Dublin",
+              "Europe/Paris",
+              "Europe/Berlin",
+              "Europe/Madrid",
+              "Europe/Amsterdam",
+              "Europe/Stockholm",
+              "Europe/Athens",
+              "Europe/Moscow",
+              "Africa/Johannesburg",
+              "Asia/Dubai",
+              "Asia/Kolkata",
+              "Asia/Singapore",
+              "Asia/Hong_Kong",
+              "Asia/Shanghai",
+              "Asia/Tokyo",
+              "Asia/Seoul",
+              "Australia/Sydney",
+              "Pacific/Auckland",
+            ].map((tz) => (
+              <option key={tz} value={tz}>
+                {tz}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label htmlFor="settle_window_hours" className="block text-sm mb-1">

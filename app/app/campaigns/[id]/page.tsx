@@ -139,16 +139,17 @@ export default async function CampaignDetailPage({ params }: { params: Params })
         </div>
         <div className="border border-ink/10">
           {campaign.variants.map((v) => {
-            const totalSamples = v.cohorts.reduce(
-              (acc, c) => acc + c.samples,
-              0,
-            );
+            const totalSent = v.cohorts.reduce((a, c) => a + c.sent, 0);
+            const totalInFlight = v.cohorts.reduce((a, c) => a + c.in_flight, 0);
+            const totalConverted = v.cohorts.reduce((a, c) => a + c.converted, 0);
+            const totalLost = v.cohorts.reduce((a, c) => a + c.lost, 0);
+            const ctr = totalSent > 0 ? totalConverted / totalSent : 0;
             return (
               <div
                 key={v.id}
                 className="border-b border-ink/10 last:border-b-0 px-4 py-4"
               >
-                <div className="flex items-baseline justify-between mb-3">
+                <div className="flex items-baseline justify-between mb-2">
                   <div className="flex items-baseline gap-3">
                     <div className="font-serif text-lg leading-tight">
                       {v.subject}
@@ -174,37 +175,66 @@ export default async function CampaignDetailPage({ params }: { params: Params })
                     </span>
                   </div>
                 </div>
-                {totalSamples > 0 ? (
-                  <div className="space-y-1">
+                {totalSent > 0 ? (
+                  <div className="text-[10px] font-mono text-ink/40 tabular-nums mb-3">
+                    {totalSent.toLocaleString()} sent · {totalInFlight} in flight ·{" "}
+                    {totalConverted} converted · {totalLost} lost ·{" "}
+                    <span className="text-ink/70">{pct(ctr, 1)} CTR</span>
+                  </div>
+                ) : (
+                  <div className="text-[10px] font-mono text-ink/40 mb-3">
+                    Not yet dispatched.
+                  </div>
+                )}
+                {v.cohorts.length > 0 ? (
+                  <div className="space-y-3">
                     {v.cohorts.map((c) => (
-                      <div
-                        key={c.cohort}
-                        className="grid grid-cols-[80px_1fr_60px_60px_60px] gap-3 items-center text-xs font-mono tabular-nums"
-                      >
-                        <div className="text-ink/50 uppercase tracking-[0.1em] truncate">
-                          {c.cohort}
+                      <div key={c.cohort} className="space-y-0.5">
+                        <div className="grid grid-cols-[80px_1fr_60px_60px_60px] gap-3 items-center text-xs font-mono tabular-nums">
+                          <div className="text-ink/60 uppercase tracking-[0.1em] truncate">
+                            {c.cohort}
+                          </div>
+                          {/* CI bar: position the tick at mean across [0, ~0.2] */}
+                          <div className="relative h-3 border-t border-b border-ink/15">
+                            <div
+                              className="absolute top-0 bottom-0 w-px bg-ink"
+                              style={{ left: `${Math.min(100, c.mean * 500)}%` }}
+                              title={`mean=${fmt(c.mean, 3)}`}
+                            />
+                          </div>
+                          <div className="text-right text-ink/70">{pct(c.mean, 2)}</div>
+                          <div className="text-right text-ink/50">
+                            n={Math.round(c.samples)}
+                          </div>
+                          <div className="text-right text-ink/70">
+                            {pct(c.prob_best, 0)}
+                          </div>
                         </div>
-                        {/* CI bar: position the tick at mean across [0, ~0.2] */}
-                        <div className="relative h-3 border-t border-b border-ink/15">
-                          <div
-                            className="absolute top-0 bottom-0 w-px bg-ink"
-                            style={{ left: `${Math.min(100, c.mean * 500)}%` }}
-                            title={`mean=${fmt(c.mean, 3)}`}
-                          />
-                        </div>
-                        <div className="text-right text-ink/70">{pct(c.mean, 2)}</div>
-                        <div className="text-right text-ink/50">
-                          n={Math.round(c.samples)}
-                        </div>
-                        <div className="text-right text-ink/70">
-                          {pct(c.prob_best, 0)}
-                        </div>
+                        {c.sent > 0 ? (
+                          <div className="grid grid-cols-[80px_1fr] gap-3 text-[10px] font-mono tabular-nums text-ink/40">
+                            <div />
+                            <div>
+                              {c.sent} sent ·{" "}
+                              <span className={c.in_flight > 0 ? "text-ink/60" : ""}>
+                                {c.in_flight} in flight
+                              </span>{" "}
+                              ·{" "}
+                              <span className={c.converted > 0 ? "text-emerald-700" : ""}>
+                                {c.converted} converted
+                              </span>{" "}
+                              ·{" "}
+                              <span className={c.lost > 0 ? "text-ink/50" : ""}>
+                                {c.lost} lost
+                              </span>
+                            </div>
+                          </div>
+                        ) : null}
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="text-xs font-mono text-ink/40">
-                    No samples yet.
+                    No cohort data yet.
                   </div>
                 )}
               </div>

@@ -23,6 +23,10 @@ export type CohortPosterior = {
   mean: number;
   samples: number;
   prob_best: number;
+  sent: number;
+  in_flight: number;
+  converted: number;
+  lost: number;
 };
 
 export type VariantState = {

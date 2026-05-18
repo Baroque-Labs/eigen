@@ -13,8 +13,39 @@ function ctrLabel(clicks: number, sends: number): string {
   return `${((clicks / sends) * 100).toFixed(1)}%`;
 }
 
+function isBackendDown(err: unknown): boolean {
+  const cause = (err as { cause?: { code?: string; errors?: { code?: string }[] } })?.cause;
+  if (cause?.code === "ECONNREFUSED") return true;
+  return cause?.errors?.some((e) => e?.code === "ECONNREFUSED") ?? false;
+}
+
 export default async function CampaignsPage() {
-  const campaigns = await listCampaigns();
+  let campaigns: Awaited<ReturnType<typeof listCampaigns>>;
+  try {
+    campaigns = await listCampaigns();
+  } catch (err) {
+    if (!isBackendDown(err)) throw err;
+    return (
+      <div className="max-w-5xl">
+        <div className="flex items-baseline justify-between mb-10">
+          <h1 className="font-serif text-4xl tracking-tight">Campaigns</h1>
+        </div>
+        <div className="border border-ink/10 p-16 text-center">
+          <p className="font-serif text-2xl text-ink/70 mb-2">
+            Can&apos;t reach the eigen-backend service.
+          </p>
+          <p className="text-sm text-ink/50">
+            Connection refused at{" "}
+            <code className="font-mono">
+              {process.env.EIGEN_BACKEND_URL ?? "http://localhost:8000"}
+            </code>
+            . Start the backend or set <code className="font-mono">EIGEN_BACKEND_URL</code>{" "}
+            in <code className="font-mono">.env</code>.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl">

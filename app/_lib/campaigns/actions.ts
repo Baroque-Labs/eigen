@@ -57,7 +57,11 @@ function parseCampaignFields(formData: FormData): ParsedFields | string {
   const emailsRaw = String(formData.get("emails") ?? "");
   const nVariants = Number(formData.get("n_variants") ?? 4);
   const batchSize = Number(formData.get("batch_size") ?? 100);
-  const cadenceMinutes = Number(formData.get("cadence_minutes") ?? 60);
+  const cadenceValue = Number(formData.get("cadence_value") ?? 60);
+  const cadenceUnit = String(formData.get("cadence_unit") ?? "minutes");
+  const cadenceUnitMinutes =
+    cadenceUnit === "days" ? 1440 : cadenceUnit === "hours" ? 60 : 1;
+  const cadenceMinutes = cadenceValue * cadenceUnitMinutes;
   const timezone = String(formData.get("timezone") ?? "UTC").trim() || "UTC";
   const settleWindowHours = Number(formData.get("settle_window_hours") ?? 24);
   if (!name) return "Name is required.";
@@ -69,6 +73,7 @@ function parseCampaignFields(formData: FormData): ParsedFields | string {
     return "Variants must be between 1 and 64.";
   }
   if (!Number.isFinite(batchSize) || batchSize < 1) return "Batch size must be ≥ 1.";
+  if (!Number.isFinite(cadenceValue) || cadenceValue < 1) return "Cadence must be ≥ 1.";
   if (!Number.isFinite(cadenceMinutes) || cadenceMinutes < 1) return "Cadence must be ≥ 1 minute.";
   if (!Number.isFinite(settleWindowHours) || settleWindowHours < 0.01) return "Settle window must be > 0 hours.";
   return {
