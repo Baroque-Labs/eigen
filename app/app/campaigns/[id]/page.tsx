@@ -194,11 +194,19 @@ export default async function CampaignDetailPage({ params }: { params: Params })
                           <div className="text-ink/60 uppercase tracking-[0.1em] truncate">
                             {c.cohort}
                           </div>
-                          {/* CI bar: position the tick at mean across [0, ~0.2] */}
+                          {/* CI bar: tick at mean across [0, 0.5]. Reference
+                              marks every 10% so the scale is legible. */}
                           <div className="relative h-3 border-t border-b border-ink/15">
+                            {[10, 20, 30, 40].map((p) => (
+                              <div
+                                key={p}
+                                className="absolute top-1 bottom-1 w-px bg-ink/10"
+                                style={{ left: `${p * 2}%` }}
+                              />
+                            ))}
                             <div
                               className="absolute top-0 bottom-0 w-px bg-ink"
-                              style={{ left: `${Math.min(100, c.mean * 500)}%` }}
+                              style={{ left: `${Math.min(100, c.mean * 200)}%` }}
                               title={`mean=${fmt(c.mean, 3)}`}
                             />
                           </div>
